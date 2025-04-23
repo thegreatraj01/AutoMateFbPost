@@ -1,0 +1,40 @@
+# Node.js - Server-side
+/server/node_modules/
+/server/.env
+/server/logs/
+/server/npm-debug.log*
+/server/yarn-debug.log*
+/server/yarn-error.log*
+/server/Notes
+
+# React - Client-side
+/client/node_modules/
+/client/.env
+/client/build/
+/client/.cache/
+/client/.eslintcache
+/client/npm-debug.log*
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS/system files
+.DS_Store
+Thumbs.db
+
+# Optional: IDE/Editor config files (VS Code, WebStorm, etc.)
+.vscode/
+.idea/
+
+# Optional: Build outputs
+/dist/
+/build/
+
+# Optional: Docker files
+docker-compose.yml
+Dockerfile
+
+# Optional: MacOS specific files
+*.swp
+*.swo

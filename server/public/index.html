@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FB Post Automation Project</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 900px;
+      margin: auto;
+      padding: 40px 20px;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    ul {
+      line-height: 1.6;
+    }
+    .highlight {
+      color: #007bff;
+      font-weight: bold;
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 0.9rem;
+      text-align: center;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <h1>📸 Facebook Post Automation</h1>
+
+  <p>Welcome to the <span class="highlight">AI-powered Facebook Post Automation</span> tool! This project is built to help users automatically generate and schedule Facebook image posts with custom prompts and optional captions.</p>
+
+  <h2>🚀 Goal of the Application</h2>
+  <p>The goal is to automate the process of generating, reviewing, and publishing Facebook image posts so creators and marketers can save time, maintain consistency, and focus more on content strategy rather than manual work.</p>
+
+  <h2>✨ Features</h2>
+  <ul>
+    <li>User authentication via email/password (social login coming soon)</li>
+    <li>Support for multiple Facebook Pages per user</li>
+    <li>Generate images using AI via prompt input (single or batch)</li>
+    <li>Auto-create batches with filters like ratio, quality, and categories</li>
+    <li>Review AI-generated images and delete unwanted ones before posting</li>
+    <li>Schedule posts in a custom date/time range (with 30 min interval)</li>
+    <li>Each post includes only one image and optional text content</li>
+    <li>Cloudinary is used to store generated images</li>
+    <li>MongoDB stores users, prompts, images, posts, and schedules</li>
+    <li>Email verification and password reset with OTP</li>
+  </ul>
+
+  <h2>🛠️ Tech Stack</h2>
+  <ul>
+    <li>Frontend: (Coming Soon)</li>
+    <li>Backend: Node.js, Express.js, MongoDB, Mongoose</li>
+    <li>Cloudinary for image storage</li>
+    <li>MailerSend for transactional emails</li>
+    <li>Facebook Graph API for post publishing</li>
+  </ul>
+
+  <footer>
+    Made with ❤️ by Rajballav Kumar
+  </footer>
+</body>
+</html>

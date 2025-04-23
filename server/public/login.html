@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #1877F2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background-color: #166fe5;
+        }
+
+        .separator {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .separator::before,
+        .separator::after {
+            content: '';
+            display: inline-block;
+            width: 40%;
+            height: 1px;
+            background: #ccc;
+            vertical-align: middle;
+        }
+
+        .separator span {
+            margin: 0 10px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        #status {
+            margin-top: 15px;
+            text-align: center;
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Login</h1>
+
+    <form onsubmit="event.preventDefault(); loginWithEmail();">
+        <label for="email">Email:</label>
+        <input type="email" id="email" placeholder="Enter your email" required />
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" placeholder="Enter your password" required />
+
+        <button type="submit">Login with Email</button>
+    </form>
+
+    <div class="separator"><span>OR</span></div>
+
+    <button onclick="loginWithFacebook()">Login with Facebook</button>
+
+    <div id="status"></div>
+
+    <script>
+        function loginWithEmail() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Replace this with your backend API call
+            console.log('Logging in with Email:', email, password);
+            document.getElementById('status').textContent = 'Email login initiated.';
+        }
+
+        function loginWithFacebook() {
+            console.log('Redirecting to backend for Facebook login...');
+            document.getElementById('status').textContent = 'Facebook login initiated.';
+
+            // Redirect to backend Facebook auth route
+            window.location.href = 'api/v1/auth/facebook';
+        }
+    </script>
+</body>
+
+</html>

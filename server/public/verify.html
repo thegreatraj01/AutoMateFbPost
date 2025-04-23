@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Email Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+
+    .message {
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Email Verification</h1>
+  <p class="message" id="status">Verifying your email...</p>
+
+  <script>
+    const status = document.getElementById('status');
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    const redirectToHome = (delay = 3000) => {
+      setTimeout(() => {
+        window.location.href = '/';
+      }, delay);
+    };
+
+    if (!token) {
+      status.textContent = 'Verification token not found!';
+      status.classList.add('error');
+      redirectToHome();
+    } else {
+      fetch(`/api/v1/auth/verify-email?token=${token}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            status.textContent = data.message;
+            status.classList.add('success');
+          } else {
+            status.textContent = data.message || 'Verification failed.';
+            status.classList.add('error');
+          }
+          redirectToHome();
+        })
+        .catch(err => {
+          status.textContent = 'An error occurred during verification.';
+          status.classList.add('error');
+          redirectToHome();
+        });
+    }
+  </script>
+</body>
+</html>
