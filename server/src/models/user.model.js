@@ -2,6 +2,15 @@ import { Schema, model } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
+const PageSchema = new Schema({
+  pageId: { type: String, required: true },
+  pageName: { type: String, required: true },
+  pageAccessToken: { type: String, required: true, select: false },
+  expiresAt: { type: Date, required: true },
+  category: String,
+  permissions: [String],
+});
+
 const UserSchema = new Schema(
   {
     userName: {
@@ -40,8 +49,7 @@ const UserSchema = new Schema(
       trim: true,
     },
     avatar: {
-      type: String, // Cloudinary URL
-      // required: [true, "Avatar is required"],
+      type: String,
     },
     password: {
       type: String,
@@ -56,20 +64,8 @@ const UserSchema = new Schema(
     authProvider: {
       type: String,
       enum: ["local", "google", "facebook"],
-      default: "local", // supports future social login
+      default: "local",
     },
-    facebookId: {
-      type: String,
-      unique: true,
-      sparse: true,
-    },
-    facebookPages: [
-      {
-        pageId: String,
-        pageName: String,
-        accessToken: String,
-      },
-    ],
     isEmailVerified: {
       type: Boolean,
       default: false,
@@ -81,23 +77,41 @@ const UserSchema = new Schema(
     refreshToken: {
       type: String,
     },
+
+    // Facebook-specific fields
+    facebookId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    facebookAccessToken: {
+      type: String,
+      select: false,
+    },
+    facebookTokenExpiry: {
+      type: Date,
+    },
+    facebookSignedRequest: {
+      type: String,
+      select: false,
+    },
   },
   { timestamps: true }
 );
 
-// Hash password before saving
+// Password hashing
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-// Password check
+// Password validation
 UserSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-// JWT token generation
+// Token methods
 UserSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {

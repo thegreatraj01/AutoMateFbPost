@@ -6,6 +6,7 @@ import { sendVerificationEmail } from "../utils/VefiryEmail.js";
 import { HTTP_STATUS_CODES } from "../utils/HttpStatusCode.js";
 import jwt from "jsonwebtoken";
 import { generateRandomPassword, generateUsernameFromName } from "../service/user.service.js";
+import { FacebookAuth } from "../models/facebookAuth.model.js";
 
 const { FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, FACEBOOK_REDIRECT_URI } = process.env;
 
@@ -157,144 +158,141 @@ export const resendVerificationEmail = asyncHandler(async (req, res) => {
 // Initiates Facebook authentication
 // Redirects user to Facebook login page
 export const authFacebook = asyncHandler(async (req, res) => {
-    const fbLoginUrl = `https://www.facebook.com/v22.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${FACEBOOK_REDIRECT_URI}&response_type=code&scope=email,pages_show_list,pages_manage_posts,public_profile,publish_video&auth_type=rerequest`;
+    const fbLoginUrl = `https://www.facebook.com/v22.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${FACEBOOK_REDIRECT_URI}&response_type=code&scope=email,pages_show_list,pages_manage_posts,public_profile,publish_video`;
     res.status(HTTP_STATUS_CODES.TEMPORARY_REDIRECT.code).redirect(fbLoginUrl);
 });
 
 
 
-
-// Handles Facebook callback
 export const facebookCallback = asyncHandler(async (req, res) => {
-    const { error } = req.query;
-    if (error == "access_denied") {
-        return res.status(400).json(new ApiResponse(400, null, "User denied access to Facebook account"));
+  const { error, code } = req.query;
+
+  if (error === "access_denied") {
+    return res.status(400).json(new ApiResponse(400, null, "User denied access to Facebook account"));
+  }
+
+  if (!code) throw new ApiError(400, "Missing authorization code");
+
+  // Step 1: Exchange code for access token
+  const tokenParams = new URLSearchParams({
+    client_id: process.env.FACEBOOK_APP_ID,
+    client_secret: process.env.FACEBOOK_APP_SECRET,
+    redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
+    code,
+  });
+
+  const tokenRes = await fetch(`https://graph.facebook.com/v22.0/oauth/access_token?${tokenParams.toString()}`);
+  const tokenData = await tokenRes.json();
+
+  if (!tokenRes.ok) {
+    throw new ApiError(tokenRes.status, tokenData.error?.message || "Failed to fetch access token");
+  }
+
+  const accessToken = tokenData.access_token;
+
+  // Step 2: Validate the token
+  const appAccessToken = `${process.env.FACEBOOK_APP_ID}|${process.env.FACEBOOK_APP_SECRET}`;
+  const tokenVerifyRes = await fetch(
+    `https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${appAccessToken}`
+  );
+  const tokenVerifyData = await tokenVerifyRes.json();
+
+  if (!tokenVerifyData.data?.is_valid) {
+    throw new ApiError(401, "Invalid Facebook access token");
+  }
+
+  const facebookId = tokenVerifyData.data.user_id;
+
+  // Step 3: Get user profile data
+  const profileFields = "id,name,email,picture.type(large),first_name,last_name";
+  const profileRes = await fetch(`https://graph.facebook.com/me?fields=${profileFields}&access_token=${accessToken}`);
+  const fbUser = await profileRes.json();
+
+  if (!profileRes.ok) {
+    throw new ApiError(profileRes.status, fbUser.error?.message || "Failed to fetch Facebook profile");
+  }
+
+  // Step 4: Find or create user
+  let user = fbUser.email
+    ? await User.findOne({ email: fbUser.email })
+    : await User.findOne({ facebookId });
+
+  const fullName = fbUser.name || `${fbUser.first_name} ${fbUser.last_name}`;
+  const avatar = fbUser.picture?.data?.url || null;
+  const email = fbUser.email || null;
+
+  if (user) {
+    // Update user data
+    user.facebookId = facebookId;
+    user.fullName = fullName;
+    user.avatar = avatar;
+    user.authProvider = "facebook";
+    user.facebookAccessToken = accessToken;
+    user.facebookTokenExpiry = new Date(Date.now() + tokenVerifyData.data.expires_at * 1000);
+
+    if (email && !user.email) {
+      user.email = email;
+      user.isEmailVerified = true;
+      user.isTemporaryEmail = false;
     }
 
-    const { code } = req.query;
-    if (!code) throw new ApiError(400, "Missing authorization code");
-
-    // Step 1: Exchange code for access token
-    const tokenParams = new URLSearchParams({
-        client_id: FACEBOOK_APP_ID,
-        client_secret: FACEBOOK_APP_SECRET,
-        redirect_uri: FACEBOOK_REDIRECT_URI,
-        code,
-    });
-
-    const tokenRes = await fetch(`https://graph.facebook.com/v22.0/oauth/access_token?${tokenParams.toString()}`);
-    const tokenData = await tokenRes.json();
-
-    if (!tokenRes.ok) {
-        throw new ApiError(tokenRes.status, tokenData.error?.message || "Failed to fetch access token");
-    }
-    const access_token = tokenData.access_token;
-
-    // Step 2: Validate the token
-    const appAccessToken = `${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}`;
-    const tokenverify = await fetch(`https://graph.facebook.com/debug_token?input_token=${access_token}&access_token=${appAccessToken}`);
-    const tokenverifyData = await tokenverify.json();
-
-    if (!tokenverifyData.data?.is_valid) {
-        throw new ApiError(401, "Invalid Facebook access token");
-    }
-
-    // Step 3: Get user profile data
-    const fields = 'id,name,email,picture.type(large),first_name,last_name';
-    const profileRes = await fetch(`https://graph.facebook.com/me?fields=${fields}&access_token=${access_token}`);
-    const userData = await profileRes.json();
-    console.log(userData);
-
-    if (!profileRes.ok) {
-        throw new ApiError(profileRes.status, userData.error?.message || "Failed to fetch user profile");
-    }
-
-    // Step 4: Find or create user
-    const existingUser = await User.findOne({
-        $or: [
-            { facebookId: userData.id },
-            { email: userData.email }
-        ]
-    });
-
-    let user;
-    if (existingUser) {
-        // Update existing user with latest Facebook data
-        existingUser.facebookId = userData.id;
-        existingUser.fullName = userData.name || `${userData.first_name} ${userData.last_name}`;
-        existingUser.avatar = userData.picture?.data?.url || existingUser.avatar;
-        existingUser.authProvider = 'facebook';
-
-        // Only update email if we got one from Facebook and user doesn't have one
-        if (userData.email && !existingUser.email) {
-            existingUser.email = userData.email;
-            existingUser.isEmailVerified = true;
-            existingUser.isTemporaryEmail = false;
-        }
-
-        await existingUser.save();
-        user = existingUser;
-    } else {
-        // Create new user
-        const username = generateUsernameFromName(userData.name);
-        const tempPassword = generateRandomPassword(8);
-
-        user = new User({
-            facebookId: userData.id,
-            fullName: userData.name || `${userData.first_name} ${userData.last_name}`,
-            userName: username,
-            email: userData.email || null,
-            isTemporaryEmail: !userData.email,
-            isEmailVerified: !!userData.email,
-            avatar: userData.picture?.data?.url || null,
-            authProvider: 'facebook',
-            password: tempPassword // Required field but not used for social login
-        });
-
-        await user.save();
-    }
-
-    // Step 5: Generate tokens
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
-
-    // Update user's refresh token
-    user.refreshToken = refreshToken;
     await user.save();
+  } else {
+    // Create new user
+    user = await User.create({
+      facebookId,
+      fullName,
+      userName: generateUsernameFromName(fullName),
+      email,
+      isEmailVerified: !!email,
+      isTemporaryEmail: !email,
+      avatar,
+      authProvider: "facebook",
+      password: generateRandomPassword(12),
+      facebookAccessToken: accessToken,
+      facebookTokenExpiry: new Date(Date.now() + tokenVerifyData.data.expires_at * 1000),
+    });
+  }
 
-    // Step 6: Prepare response based on email availability
-    if (!userData.email) {
-        return res.status(200).json(new ApiResponse(200, {
-            user: {
-                _id: user._id,
-                facebookId: user.facebookId,
-                fullName: user.fullName,
-                userName: user.userName,
-                isTemporaryEmail: true,
-                authProvider: 'facebook',
-                avatar: user.avatar
-            },
-            requiresEmail: true,
-            accessToken,
-            refreshToken
-        }, "Login successful - please provide your email"));
-    }
+  // Step 5: Generate tokens
+  const jwtAccess = user.generateAccessToken();
+  const jwtRefresh = user.generateRefreshToken();
+  user.refreshToken = jwtRefresh;
+  await user.save();
 
-    // Successful login with email
-    return res.status(200).json(new ApiResponse(200, {
-        user: {
-            _id: user._id,
-            email: user.email,
-            fullName: user.fullName,
-            userName: user.userName,
-            isEmailVerified: user.isEmailVerified,
-            authProvider: 'facebook',
-            avatar: user.avatar
-        },
-        accessToken,
-        refreshToken
-    }, "Login successful"));
+  // Step 6: Final response
+  const baseUser = {
+    _id: user._id,
+    fullName: user.fullName,
+    userName: user.userName,
+    avatar: user.avatar,
+    authProvider: "facebook",
+  };
+
+  if (!email) {
+    return res.status(200).json(
+      new ApiResponse(200, {
+        user: { ...baseUser, facebookId, isTemporaryEmail: true },
+        requiresEmail: true,
+        accessToken: jwtAccess,
+        refreshToken: jwtRefresh,
+      }, "Login successful - please provide your email")
+    );
+  }
+
+  res.status(200).json(
+    new ApiResponse(200, {
+      user: {
+        ...baseUser,
+        email: user.email,
+        isEmailVerified: user.isEmailVerified,
+      },
+      accessToken: jwtAccess,
+      refreshToken: jwtRefresh,
+    }, "Login successful")
+  );
 });
+
 
 
 

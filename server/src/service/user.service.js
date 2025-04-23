@@ -1,5 +1,3 @@
-import User from "../models/user.model.js";
-
 
 export const generateUsernameFromName = (name) => {
     const base = name.toLowerCase().replace(/\s+/g, '');
@@ -42,53 +40,3 @@ export function generateRandomPassword(length = 10) {
         .join('');
 }
 
-// user.service.js
-export const findOrCreateFacebookUser = async (facebookData) => {
-    const { id, email, name, picture } = facebookData;
-
-    // Try to find user by facebookId first
-    let user = await User.findOne({ facebookId: id });
-
-    if (!user) {
-        // If not found, try by email (if available)
-        if (email) {
-            user = await User.findOne({ email });
-
-            // If found by email but doesn't have facebookId, update it
-            if (user && !user.facebookId) {
-                user.facebookId = id;
-                user.authProvider = 'facebook';
-                await user.save();
-            }
-        }
-    }
-
-    // If user still not found, create new user
-    if (!user) {
-        const username = generateUsernameFromName(name); // Implement this helper
-
-        user = new User({
-            facebookId: id,
-            fullName: name,
-            userName: username,
-            email: email || null,
-            isTemporaryEmail: !email, // Mark as temporary if no email
-            isEmailVerified: !!email, // Mark as verified if email from FB
-            avatar: picture?.data?.url || null,
-            authProvider: 'facebook',
-            password: generateRandomPassword(), 
-        });
-
-        await user.save();
-    }
-
-    // If user exists but was missing email, update if we now have it
-    if (!user.email && email) {
-        user.email = email;
-        user.isTemporaryEmail = false;
-        user.isEmailVerified = true;
-        await user.save();
-    }
-
-    return user;
-};
