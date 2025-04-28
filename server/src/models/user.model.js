@@ -2,15 +2,6 @@ import { Schema, model } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
-const PageSchema = new Schema({
-  pageId: { type: String, required: true },
-  pageName: { type: String, required: true },
-  pageAccessToken: { type: String, required: true, select: false },
-  expiresAt: { type: Date, required: true },
-  category: String,
-  permissions: [String],
-});
-
 const UserSchema = new Schema(
   {
     userName: {
@@ -19,12 +10,10 @@ const UserSchema = new Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      index: true,
-      minlength: [3, "Username must be at least 3 characters long"],
+      minlength: [5, "Username must be at least 5 characters long"],
       maxlength: [30, "Username cannot exceed 30 characters"],
       validate: {
-        validator: (v) =>
-          /^[a-zA-Z0-9!@#$%^&*()_+{}\[\]:;<>,.?/~\\-]+$/.test(v),
+        validator: (v) => /^[a-zA-Z0-9!@#$%^&*()_+{}\[\]:;<>,.?/~\\-]+$/.test(v),
         message: (props) =>
           `${props.value} can only contain letters, numbers, and special characters.`,
       },
@@ -37,16 +26,16 @@ const UserSchema = new Schema(
       lowercase: true,
       validate: {
         validator: (v) =>
-          v
-            ? /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v)
-            : true,
-        message: (props) => `${props.value} is not a valid email!`,
+          v ? /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) : true,
+        message: (props) => `${props.value} is not a valid email address!`,
       },
     },
     fullName: {
       type: String,
       required: [true, "Full name is required"],
       trim: true,
+      minlength: [2, "Full name must be at least 2 characters long"],
+      maxlength: [100, "Full name cannot exceed 100 characters"],
     },
     avatar: {
       type: String,
@@ -58,60 +47,46 @@ const UserSchema = new Schema(
       validate: {
         validator: (v) => /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/.test(v),
         message:
-          "Password must contain at least one number, one lowercase and one uppercase letter",
+          "Password must contain at least one number, one lowercase and one uppercase letter.",
       },
     },
     authProvider: {
       type: String,
-      enum: ["local", "google", "facebook"],
+      enum: {
+        values: ["local", "facebook"],
+        message: "Auth provider must be either 'local', 'google', or 'facebook'.",
+      },
       default: "local",
     },
     isEmailVerified: {
       type: Boolean,
       default: false,
     },
-    isTemporaryEmail: {
-      type: Boolean,
-      default: false,
-    },
     refreshToken: {
       type: String,
     },
-
-    // Facebook-specific fields
     facebookId: {
       type: String,
       unique: true,
       sparse: true,
     },
-    facebookAccessToken: {
-      type: String,
-      select: false,
-    },
-    facebookTokenExpiry: {
-      type: Date,
-    },
-    facebookSignedRequest: {
-      type: String,
-      select: false,
-    },
   },
   { timestamps: true }
 );
 
-// Password hashing
+// Hash password before saving
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-// Password validation
+// Compare passwords
 UserSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-// Token methods
+// Generate Access Token
 UserSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
@@ -121,19 +96,16 @@ UserSchema.methods.generateAccessToken = function () {
       fullName: this.fullName,
     },
     process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-    }
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
   );
 };
 
+// Generate Refresh Token
 UserSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     { _id: this._id },
     process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-    }
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
   );
 };
 

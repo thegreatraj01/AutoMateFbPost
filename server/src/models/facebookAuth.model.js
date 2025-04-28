@@ -1,61 +1,38 @@
-// models/FacebookAuth.model.js
 import { Schema, model } from "mongoose";
 
 const FacebookAuthSchema = new Schema(
     {
-        user: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            unique: true
+      user: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: [true, "User reference is required"],
+      },
+      facebookId: {
+        type: String,
+        unique: true,
+        required: [true, "Facebook ID is required"],
+      },
+      facebookAccessToken: {
+        type: String,
+        required: [true, "Facebook access token is required"],
+        select: false, // Hide it by default
+      },
+      facebookTokenExpiry: {
+        type: Date,
+        required: [true, "Facebook token expiry date is required"],
+      },
+      pages: [
+        {
+          pageId: { type: String, required: true },
+          pageName: { type: String, required: true },
+          pageAccessToken: { type: String, required: true },
+          tasks: [{ type: String }],
         },
-        facebookId: {
-            type: String,
-            required: true,
-            unique: true
-        },
-        accessToken: {
-            type: String,
-            required: true,
-            select: false // Important for security
-        },
-        tokenExpiry: {
-            type: Date,
-            required: true
-        },
-        signedRequest: {
-            type: String,
-            select: false
-        },
-        pages: [
-            {
-                pageId: {
-                    type: String,
-                    required: true
-                },
-                pageName: {
-                    type: String,
-                    required: true
-                },
-                pageAccessToken: {
-                    type: String,
-                    required: true,
-                    select: false
-                },
-                expiresAt: {
-                    type: Date,
-                    required: true
-                },
-                category: String,
-                permissions: [String]
-            }
-        ]
+      ],
     },
     { timestamps: true }
-);
+  );
+  
 
-// Index for faster queries
-FacebookAuthSchema.index({ facebookId: 1 });
-FacebookAuthSchema.index({ tokenExpiry: 1 });
-
-export const FacebookAuth = model("FacebookAuth", FacebookAuthSchema);
+const FacebookAuth = model("FacebookAuth", FacebookAuthSchema);
+export default FacebookAuth;
