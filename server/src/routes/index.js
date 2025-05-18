@@ -7,7 +7,7 @@ import freePicRouter from './FreePik.router.js';
 
 router.use("/auth" , authRouter);
 router.use('/user',userRouter);
-router.use('/freepic',freePicRouter);
+router.use('/freepik',freePicRouter);
 
 
 export default router;

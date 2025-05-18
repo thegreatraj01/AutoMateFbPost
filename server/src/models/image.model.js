@@ -15,9 +15,6 @@ const imageSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    base64: {
-        type: String
-    },
     isDeleted: {
         type: Boolean,
         default: false

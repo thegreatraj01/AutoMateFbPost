@@ -1,49 +1,51 @@
-import { FREEPIK_OPTIONS } from '../constant.js';
+import axios from 'axios';
 import { asyncHandler } from '../utils/AsyncHandler.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
+import { uploadFromBase64, uploadFromUrl } from '../utils/cloudinaryUtils.js';
 import { HTTP_STATUS_CODES } from '../utils/HttpStatusCode.js';
-import { base64ToImage } from '../service/base64ToImage.js';
 
-const POLL_INTERVAL = 3000; // 3 seconds
-const MAX_RETRIES = 20;     // Max attempts before giving up (~60 sec)
+// Configuration
+const FREEPIK_API = axios.create({
+    baseURL: 'https://api.freepik.com/v1/ai',
+    headers: {
+        'Content-Type': 'application/json',
+        'x-freepik-api-key': process.env.FREEPIK_API_KEY
+    },
+    timeout: 30000 // 30 seconds timeout
+});
+
+const POLL_INTERVAL = 3000;
+const MAX_RETRIES = 20;
 
 /**
- * Poll Freepik until status is COMPLETED or FAILED
+ * Poll Freepik status with Axios
  */
 const pollFreepikStatus = async (taskId) => {
-    console.log(taskId);
-    const url = `https://api.freepik.com/v1/ai/text-to-image/flux-dev/${taskId}`;
-    const headers = { 'x-freepik-api-key': process.env.FREEPIC_API_KEY };
-
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-        const res = await fetch(url, { method: 'GET', headers });
-        // console.log("res", res);
-        const data = await res.json();
-        // console.log("data", data);
+        try {
+            const { data } = await FREEPIK_API.get(`/text-to-image/flux-dev/${taskId}`);
 
-        if (!res.ok) {
-            throw new ApiError(res.status, "Failed to fetch image status", data);
+            if (data.data.status === "COMPLETED") {
+                return data.data.generated;
+            }
+            if (data.data.status === "FAILED") {
+                throw new ApiError(500, "Image generation failed");
+            }
+
+            await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
+        } catch (error) {
+            if (attempt === MAX_RETRIES) {
+                throw new ApiError(504, "Polling timeout", {
+                    originalError: error.response?.data?.message || error.message
+                });
+            }
         }
-
-        const { status, generated } = data.data;
-
-        if (status === "COMPLETED") {
-            return generated; // array of image URLs
-        }
-
-        if (status === "FAILED") {
-            throw new ApiError(500, "Image generation failed", data);
-        }
-
-        await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
     }
-
-    throw new ApiError(504, "Image generation timed out after multiple retries");
 };
 
 /**
- * Freepik Text-to-Image Generation with Polling
+ * Flux Dev API - Async Processing
  */
 export const FreePikGenrateImageFlux = asyncHandler(async (req, res) => {
     const {
@@ -52,112 +54,181 @@ export const FreePikGenrateImageFlux = asyncHandler(async (req, res) => {
         color = "vibrant",
         framing = "portrait",
         lightning = "dramatic",
-        colors = [],
-        webhook_url = ""
+        colors = [], // "colors":[{"color":"#FF0000","weight":0.5}]} 0.05 <= x <= 1
+        webhook_url = "",
+        seed = null
     } = req.body;
 
     if (!prompt) {
         throw new ApiError(HTTP_STATUS_CODES.BAD_REQUEST.code, "Prompt is required");
+    };
+    console.log(seed);
+    if (seed < 1 || seed > 4294967295) {
+        throw new ApiError(400, "Seed must be between 1 and 4294967295");
     }
+
     const payload = {
         prompt,
         aspect_ratio,
-        // webhook_url,
+        // ...(webhook_url && { webhook_url }),
+        ...(seed && { seed }),
         styling: {
-            effects: { color, framing, lightning },
-            ...(colors.length > 0 && { colors })
+            effects: {
+                color,
+                framing,
+                lightning
+            },
+            colors
         }
     };
 
+    try {
+        // Step 1: Initiate image generation
+        const { data } = await FREEPIK_API.post('/text-to-image/flux-dev', payload);
 
-    // Step 1: Initiate image generation task
-    const initiate = await fetch('https://api.freepik.com/v1/ai/text-to-image/flux-dev', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-freepik-api-key': process.env.FREEPIC_API_KEY
-        },
-        body: JSON.stringify(payload)
-    });
+        // Step 2: Poll for results
+        const imageUrls = await pollFreepikStatus(data.data.task_id);
 
-    if (!initiate.ok) {
-        throw new ApiError(initiate.status, "Freepik generation request failed");
+        // Step 3: Upload to Cloudinary (optional)
+        const cloudinaryUrls = await Promise.all(
+            imageUrls.map(url => uploadFromUrl(url, 'freepik/flux'))
+        );
+
+        // Step 4: Return response
+        return res.status(HTTP_STATUS_CODES.OK.code).json(
+            new ApiResponse(
+                HTTP_STATUS_CODES.OK.code,
+                {
+                    taskId: data.data.task_id,
+                    originalUrls: imageUrls,
+                    cloudinaryUrls: cloudinaryUrls || null
+                },
+                "Images generated successfully"
+            )
+        );
+
+    } catch (error) {
+        // console.log(error)
+        // console.log(error.response?.data)
+        // Enhanced error handling
+        const statusCode = error.response?.status || HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR.code;
+        const errorMessage = error.response?.data?.message || "Image generation failed";
+        const errorData = error.response?.data || null;
+
+        throw new ApiError(statusCode, errorMessage, errorData);
     }
-
-    const startData = await initiate.json();
-    const taskId = startData.data.task_id;
-
-    // Step 2: Poll until status is COMPLETED or FAILED
-    const imageUrls = await pollFreepikStatus(taskId);
-
-    // Step 3: Return image URLs
-    return res.status(200).json(
-        new ApiResponse(200, {
-            taskId,
-            imageUrls
-        }, "Image successfully generated")
-    );
 });
 
 
+/**
+ * Generate images using Freepik's Classic Fast API
+ * @param {string} prompt - Required. Text description of desired image
+ * @param {string} [negative_prompt=""] - What to exclude from image
+ * @param {number} [guidance_scale=1.0] - Prompt adherence (0.0-2.0)
+ * @param {number} [seed] - Random seed for reproducibility
+ * @param {number} [num_images=1] - Number of images (1-4)
+ * @param {Object} image - Size specifications
+ * @param {string} [image.size="square_1_1"] - Aspect ratio
+ * @param {Object} styling - Style parameters
+ * @param {string} [styling.style="realistic"] - Art style
+ * @param {Object} styling.effects - Visual effects
+ * @param {Array} [styling.colors] - Color palette weights
+ * @param {boolean} [filter_nsfw=true] - Filter inappropriate content
+ */
 export const FreePikGenerateImageClassicFast = asyncHandler(async (req, res) => {
     const {
         prompt,
+        aspect_ratio = "square_1_1",
+        color = "vibrant",
+        framing = "portrait",
+        lightning = "dramatic",
+        style = "photo",
+        colors = [],
+        seed = null,
         negative_prompt = '',
-        guidance_scale = 1.0,
-        seed,
-        num_images = 1,
-        image = { size: 'square_1_1' },
-        styling, // is an object with effects like color, framing, lightning
-        // styling: { style: "anime", effects: { color: "pastel", lightning: "warm", framing: "portrait" } }
+        guidance_scale = 1.0, //[0.0, 2.0]
+        num_images = 1, //1 <= x <= 4
         filter_nsfw = true
     } = req.body;
 
-    // Validate required field
-    if (!prompt) {
-        throw new ApiError(HTTP_STATUS_CODES.BAD_REQUEST.code, 'Prompt is required');
+    // Validation
+    if (!prompt) throw new ApiError(400, "Prompt is required");
+    if (guidance_scale < 0 || guidance_scale > 2) {
+        throw new ApiError(400, "Guidance scale must be between 0.0 and 2.0");
+    }
+    if (seed && (seed < 0 || seed > 1000000)) {
+        throw new ApiError(400, "Seed must be between 1 and 1000000");
+    }
+    if (num_images < 1 || num_images > 4) {
+        throw new ApiError(400, "Number of images must be between 1 and 4");
     }
 
-    // Prepare payload for API
-    const payload = {
-        prompt,
-        negative_prompt,
-        guidance_scale,
-        ...(seed && { seed }),
-        num_images,
-        image,
-        ...(styling && { styling }),
-        filter_nsfw
-    };
+    try {
+        const payload = {
+            prompt,
+            negative_prompt,
+            guidance_scale,
+            ...(seed && { seed }),
+            num_images,
+            image: {
+                size: aspect_ratio
+            },
+            styling: {
+                style,
+                effects: {
+                    color,
+                    framing,
+                    lightning
+                },
+                ...(colors.length > 0 && { colors })
+            },
+            filter_nsfw,
+        };
 
-    const response = await fetch('https://api.freepik.com/v1/ai/text-to-image', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-freepik-api-key': process.env.FREEPIC_API_KEY
-        },
-        body: JSON.stringify(payload)
-    });
+        const { data } = await FREEPIK_API.post('/text-to-image', payload);
 
+        // Process images with NSFW filtering
+        const safeImages = data.data.filter(img => !img.has_nsfw);
+        if (safeImages.length === 0 && data.data.length > 0) {
+            throw new ApiError(400, "All generated images were filtered as NSFW");
+        }
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new ApiError(response.status, 'Freepik (Classic Fast) generation failed', errorData);
+        // Upload to Cloudinary
+        const processedImages = await Promise.all(
+            safeImages.map(async (img) => {
+                const uploadResult = await uploadFromBase64(
+                    img.base64,
+                    `freepik/classic-fast`
+                );
+                return {
+                    url: uploadResult,
+                    dimensions: `${data.meta.image.width}x${data.meta.image.height}`,
+                    aspect_ratio: data.meta.image.size
+                };
+            })
+        );
+
+        return res.status(200).json(
+            new ApiResponse(200, {
+                images: processedImages,
+                meta: {
+                    seed: data.meta.seed,
+                    guidance_scale: data.meta.guidance_scale,
+                    prompt: data.meta.prompt,
+                    inference_steps: data.meta.num_inference_steps
+                }
+            }, `Successfully generated ${processedImages.length} image(s)`)
+        );
+
+    } catch (error) {
+        console.log(error.response?.data)
+        throw new ApiError(
+            error.response?.status || 500,
+            error.message || "Image generation failed",
+            {
+                apiError: error.response?.data,
+                requestParameters: req.body
+            }
+        );
     }
-
-    const result = await response.json();
-
-    // Convert base64 images to URLs using helper function
-    const imageUrls = await Promise.all(
-        result.data?.map(async (item) => {
-            return await base64ToImage(item.base64); // Implement this function to store or upload the base64 and return URL
-        }) || []
-    );
-
-    return res.status(200).json(
-        new ApiResponse(200, { imageUrls }, 'Classic Fast image(s) generated successfully')
-    );
 });
-
-
-
