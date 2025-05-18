@@ -1,13 +1,14 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import freepikRoutes from './routes/FreePik.router.js'; // Import the FreePik router
-import authRoutes from './routes/auth.routes.js'; // Import the auth router
+import cookieParser from 'cookie-parser';
 import globalErrorHandler from "./utils/globleErrorHandler.js";
+import router from "./routes/index.js";
 
 dotenv.config();
 
 const app = express();
+app.use(cookieParser());
 
 // CORS setup
 app.use(
@@ -20,17 +21,12 @@ app.use(
 app.use(express.json());
 app.use(express.static("public"));
 
-// Routes
-app.get("/", (req, res) => {
-    res.send("API is running...");
-});
 
-// Mount FreePik routes
-app.use("/api/v1/freepik", freepikRoutes); // Prefix all FreePik routes with "/api"
-app.use("/api/v1/auth", authRoutes);
+// Mount  routes
+app.use("/api/v1", router);
 
-// Other routes can be added here, for example:
-// app.use("/api/posts", postRoutes);
+
+
 app.use(globalErrorHandler);
 
 export default app;

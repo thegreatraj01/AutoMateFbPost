@@ -7,51 +7,23 @@ import { HTTP_STATUS_CODES } from "../utils/HttpStatusCode.js";
 import jwt from "jsonwebtoken";
 import { generateRandomPassword, generateUsernameFromName } from "../service/user.service.js";
 import FacebookAuth from "../models/facebookAuth.model.js";
+import { genrateAccessAndRefreshTokens } from "./user.controller.js";
 import axios from "axios";
 
 const { FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, FACEBOOK_REDIRECT_URI } = process.env;
 
-// REGISTER CONTROLLER
-export const registerUser = asyncHandler(async (req, res) => {
-  const { userName, email, fullName, password } = req.body;
 
-  if (!userName || !email || !fullName || !password) {
-    throw new ApiError(400, "All required fields must be filled.");
-  }
-
-  const existingUser = await User.findOne({ $or: [{ email }, { userName }] });
-  if (existingUser) {
-    throw new ApiError(409, "User with given email or username already exists.");
-  }
-
-  const newUser = await User.create({
-    userName,
-    email,
-    fullName,
-    password,
-  });
-
+// this function will genrate token and send it to user email
+const genrateTokenForEmailVerification = async (user) => {
   const token = jwt.sign(
-    { userId: newUser._id },
+    { userId: user._id },
     process.env.EMAIL_VERIFICATION_SECRET,
     { expiresIn: '15m' }
   );
-
   const verificationUrl = `${process.env.FRONTEND_URL}?token=${token}`;
 
-  await sendVerificationEmail(newUser.email, newUser.fullName, verificationUrl);
-
-
-  res.status(201).json(
-    new ApiResponse(
-      201,
-      true,
-      'Registered successfully. Please verify your email within 10m.',
-    )
-  );
-
-});
-
+  await sendVerificationEmail(user.email, user.fullName, verificationUrl);
+}
 
 export const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.query;
@@ -79,50 +51,111 @@ export const verifyEmail = asyncHandler(async (req, res) => {
   }
 });
 
+const generateTokenForEmailVerification = async (user) => {
+  const token = jwt.sign(
+    { userId: user._id },
+    process.env.EMAIL_VERIFICATION_SECRET,
+    { expiresIn: '15m' }
+  );
+  const verificationUrl = `${process.env.FRONTEND_URL}?token=${token}`;
+  await sendVerificationEmail(user.email, user.fullName, verificationUrl);
+}
+
+// REGISTER CONTROLLER
+export const registerUser = asyncHandler(async (req, res) => {
+  const { email, fullName, password } = req.body;
+
+  if (!email?.trim() || !fullName?.trim() || !password?.trim()) {
+    throw new ApiError(400, "All required fields must be filled.");
+  }
+
+  const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
+  if (existingUser) {
+    throw new ApiError(409, "User with given email already exists.");
+  }
+
+  const newUser = await User.create({
+    userName: generateUsernameFromName(fullName),
+    email: email.trim().toLowerCase(),
+    fullName: fullName.trim(),
+    password,
+  });
+
+  // this function will genrate a token and send it to user email
+  await generateTokenForEmailVerification(newUser);
+
+  const { accessToken, refreshToken } = await genrateAccessAndRefreshTokens(newUser._id);
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
+
+  res.status(201)
+    .cookie('accessToken', accessToken, options)
+    .cookie('refreshToken', refreshToken, options)
+    .json(
+      new ApiResponse(
+        201, {
+        user: {
+          _id: newUser._id,
+          userName: newUser.userName,
+          email: newUser.email,
+          fullName: newUser.fullName,
+          avatar: newUser.avatar,
+        }
+      },
+        'Registered successfully. Please verify your email within 10m.'
+      )
+    );
+});
 
 // LOGIN CONTROLLER
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
+  if (!email?.trim() || !password?.trim()) {
     throw new ApiError(400, "Email and password are required.");
   }
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
   if (!user) {
-    throw new ApiError(401, "Invalid email. No user found with this email.");
+    throw new ApiError(401, "Invalid email or password.");
   }
 
   const isMatch = await user.isPasswordCorrect(password);
   if (!isMatch) {
-    throw new ApiError(401, "Invalid password.");
+    throw new ApiError(401, "Invalid email or password.");
   }
 
-  // 🔒 Check if the user's email is verified
-  if (!user.isEmailVerified) {
-    throw new ApiError(403, "Email not verified. Please verify your email before logging in.");
-  }
+  // if (!user.isEmailVerified) {
+  //   throw new ApiError(403, "Email not verified. Please verify your email before logging in.");
+  // }
 
-  const accessToken = user.generateAccessToken();
-  const refreshToken = user.generateRefreshToken();
+  const { accessToken, refreshToken } = await genrateAccessAndRefreshTokens(user._id);
 
-  user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false });
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
 
-  return res.status(200).json(
-    new ApiResponse(200, {
-      user: {
-        _id: user._id,
-        userName: user.userName,
-        email: user.email,
-        fullName: user.fullName,
-        avatar: user.avatar,
-      },
-      accessToken,
-      refreshToken,
-    }, "Login successful")
-  );
+  return res.status(200)
+    .cookie('accessToken', accessToken, options)
+    .cookie('refreshToken', refreshToken, options)
+    .json(
+      new ApiResponse(200, {
+        user: {
+          _id: user._id,
+          userName: user.userName,
+          email: user.email,
+          fullName: user.fullName,
+          avatar: user.avatar,
+        },
+        accessToken,
+        refreshToken,
+      }, "Login successful")
+    );
 });
+
 
 export const resendVerificationEmail = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -141,16 +174,7 @@ export const resendVerificationEmail = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Email is already verified");
   }
 
-  const token = jwt.sign(
-    { userId: user._id },
-    process.env.EMAIL_VERIFICATION_SECRET,
-    { expiresIn: '15m' }
-  );
-
-  const verificationUrl = `${process.env.FRONTEND_URL}?token=${token}`;
-
-  await sendVerificationEmail(user.email, user.fullName, verificationUrl);
-
+  await genrateTokenForEmailVerification(user);
   return res
     .status(200)
     .json(new ApiResponse(200, null, "Verification email has been resent"));
@@ -163,8 +187,6 @@ export const authFacebook = asyncHandler(async (req, res) => {
   const fbLoginUrl = `https://www.facebook.com/v22.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${FACEBOOK_REDIRECT_URI}&response_type=code&scope=email,pages_show_list,pages_manage_posts,public_profile,publish_video,business_management`;
   res.status(HTTP_STATUS_CODES.TEMPORARY_REDIRECT.code).redirect(fbLoginUrl);
 });
-
-
 
 
 // 1 Handles Facebook callback
@@ -324,9 +346,6 @@ export const facebookCallback = asyncHandler(async (req, res) => {
     throw new ApiError(error.response?.status || 500, error.response?.data?.error?.message || "An error occurred");
   }
 });
-
-
-
 
 
 // Optional logout
