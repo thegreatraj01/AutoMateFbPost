@@ -23,6 +23,7 @@ import {
 import api from "@/lib/api-client";
 import { set } from "react-hook-form";
 import { toast } from "sonner";
+import { Input } from "../ui/input";
 
 interface ColorOption {
   color: string;
@@ -121,6 +122,10 @@ export default function ClassicGenerator() {
 
     const colorExists = colors.some((c) => c.color === newColor);
     if (colorExists) return; // prevent duplicate colors
+    if (colors.length >= 4) {
+      toast.error("Max 4 colours are accepted");
+      return ;
+    }
 
     setColors((prev) => [...prev, { color: newColor, weight: newWeight }]);
     setNewColor("#ffffff");
@@ -181,7 +186,7 @@ export default function ClassicGenerator() {
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
 
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-between gap-2">
           {/* COLUMN 1 */}
           <div className="space-y-2">
             <Label className="p-2">Style</Label>
@@ -259,13 +264,13 @@ export default function ClassicGenerator() {
 
           {/* Input fields */}
           <div className="flex gap-2 items-center">
-            <input
+            <Input
               type="color"
               value={newColor}
               onChange={(e) => setNewColor(e.target.value)}
               className="w-10 h-10 p-0 border-none"
             />
-            <input
+            <Input
               type="number"
               min="0.05"
               max="1"

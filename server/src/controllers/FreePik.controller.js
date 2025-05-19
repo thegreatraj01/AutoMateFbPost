@@ -112,7 +112,7 @@ export const FreePikGenrateImageFlux = asyncHandler(async (req, res) => {
 
     } catch (error) {
         // console.log("error 1", error);
-        // console.log(error.response?.data)
+        console.log(error.response?.data)
         // Enhanced error handling
         const statusCode = error.response?.status || HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR.code;
         const errorMessage = error.response?.data?.message || "Image generation failed";
@@ -187,7 +187,6 @@ export const FreePikGenerateImageClassicFast = asyncHandler(async (req, res) => 
             },
             filter_nsfw,
         };
-        console.log(filter_nsfw);
 
         const { data } = await FREEPIK_API.post('/text-to-image', payload);
 

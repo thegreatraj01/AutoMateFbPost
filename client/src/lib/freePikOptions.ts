@@ -64,10 +64,10 @@ export const FREEPIK_FLUX_OPTIONS = {
     ],
     // styling.effects.color
     color_effects: [
+        "vibrant",
         "softhue",
         "b&w",
         "goldglow",
-        "vibrant",
         "coldneon"
     ],
 
@@ -83,8 +83,8 @@ export const FREEPIK_FLUX_OPTIONS = {
 
     // styling.effects.lightning
     lightning_effects: [
-        "iridescent",
         "dramatic",
+        "iridescent",
         "goldenhour",
         "longexposure",
         "indoorlight",
