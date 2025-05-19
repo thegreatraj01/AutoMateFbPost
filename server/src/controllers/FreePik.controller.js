@@ -96,7 +96,7 @@ export const FreePikGenrateImageFlux = asyncHandler(async (req, res) => {
         // Step 4: Store image in the database 
         const image = await Image.create({
             user: req.user._id,
-            prompt : prompt.trim(),
+            prompt: prompt.trim(),
             imageUrl: cloudinaryUrl,
         });
         // Step 5 : Return response 
@@ -187,14 +187,19 @@ export const FreePikGenerateImageClassicFast = asyncHandler(async (req, res) => 
             },
             filter_nsfw,
         };
+        console.log(filter_nsfw);
 
         const { data } = await FREEPIK_API.post('/text-to-image', payload);
 
+        let safeImages;
         // Process images with NSFW filtering
-        const safeImages = data.data.filter(img => !img.has_nsfw);
-        if (safeImages.length === 0 && data.data.length > 0) {
-            throw new ApiError(400, "All generated images were filtered as NSFW");
+        if (!filter_nsfw) {
+            safeImages = data.data.filter(img => !img.has_nsfw);
+            if (safeImages.length === 0 && data.data.length > 0) {
+                throw new ApiError(400, "All generated images were filtered as NSFW");
+            }
         }
+        safeImages = data.data.map(img => img);
 
         // Upload to Cloudinary
         const processedImages = await Promise.all(
@@ -223,7 +228,7 @@ export const FreePikGenerateImageClassicFast = asyncHandler(async (req, res) => 
 
         return res.status(200).json(
             new ApiResponse(200, {
-                Images ,
+                Images,
                 meta: {
                     seed: data.meta.seed,
                     guidance_scale: data.meta.guidance_scale,
@@ -237,7 +242,7 @@ export const FreePikGenerateImageClassicFast = asyncHandler(async (req, res) => 
         // console.log('erorr', error)
         throw new ApiError(
             error.response?.status || 500,
-            error.response?.data?.message || "Image generation failed",
+            error.response?.data?.message || error.message || "Image generation failed",
             {
                 apiError: error.response?.data,
                 requestParameters: req.body

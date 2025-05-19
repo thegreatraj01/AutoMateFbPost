@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, Download } from "lucide-react";
 import Image from "next/image";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/lib/freePikOptions";
 import api from "@/lib/api-client";
 import { set } from "react-hook-form";
+import { toast } from "sonner";
 
 interface ColorOption {
   color: string;
@@ -47,6 +49,12 @@ export default function ClassicGenerator() {
   const [error, setError] = useState("");
   const [newColor, setNewColor] = useState("#ffffff");
   const [newWeight, setNewWeight] = useState(0.5);
+  const [filterNsfw, setFilterNsfw] = useState(true);
+
+  const handleToggle = (checked: boolean) => {
+    setFilterNsfw(!filterNsfw);
+    console.log(filterNsfw);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +75,7 @@ export default function ClassicGenerator() {
         num_images: 1,
         seed: Math.floor(Math.random() * 1000000),
         negative_prompt: negativePrompt,
+        filter_nsfw: filterNsfw,
       };
 
       const res = await api.post("/freepik/generate/classic-fast", requestData);
@@ -77,8 +86,9 @@ export default function ClassicGenerator() {
         // setNegativePrompt("");
         // setColors([]);
       }
-    } catch (err) {
+    } catch (err: any) {
       setError("Something went wrong.");
+      toast.error(err.response?.data?.message || "Something went wrong");
       console.error(err);
     } finally {
       setLoading(false);
@@ -122,9 +132,7 @@ export default function ClassicGenerator() {
   };
 
   return (
-    <div
-      className="flex flex-col md:flex-row gap-6 justify-center"
-    >
+    <div className="flex flex-col md:flex-row gap-6 justify-center">
       {/* LEFT PANEL - CONTROLS */}
       <div className="md:w-[40%] space-y-4">
         {/* PROMPT */}
@@ -139,7 +147,20 @@ export default function ClassicGenerator() {
           />
 
           <div className="mt-2">
-            <Label>Negative Prompt (Optional)</Label>
+            {/* Label + Hidden Switch in a Row */}
+            <div className="flex items-center gap-2 relative group w-fit">
+              <Label className="">Negative Prompt (Optional)</Label>
+
+              {/* Stealth Switch */}
+              <Switch
+                id="airplane-mode"
+                checked={filterNsfw}
+                onCheckedChange={handleToggle}
+                className="opacity-0 group-hover:opacity-30 transition-opacity duration-300 cursor-pointer"
+              />
+            </div>
+
+            {/* Textarea Input */}
             <Textarea
               className="bg-[#1c1b29] text-white border-none min-h-[60px] mt-1"
               value={negativePrompt}
