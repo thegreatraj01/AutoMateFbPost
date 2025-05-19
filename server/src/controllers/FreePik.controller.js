@@ -4,6 +4,8 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
 import { uploadFromBase64, uploadFromUrl } from '../utils/cloudinaryUtils.js';
 import { HTTP_STATUS_CODES } from '../utils/HttpStatusCode.js';
+import User from '../models/user.model.js';
+import Image from '../models/image.model.js';
 
 // Configuration
 const FREEPIK_API = axios.create({
@@ -56,13 +58,12 @@ export const FreePikGenrateImageFlux = asyncHandler(async (req, res) => {
         lightning = "dramatic",
         colors = [], // "colors":[{"color":"#FF0000","weight":0.5}]} 0.05 <= x <= 1
         webhook_url = "",
-        seed = null
+        seed = null //1 <= x <= 4294967295
     } = req.body;
 
     if (!prompt) {
         throw new ApiError(HTTP_STATUS_CODES.BAD_REQUEST.code, "Prompt is required");
     };
-    console.log(seed);
     if (seed < 1 || seed > 4294967295) {
         throw new ApiError(400, "Seed must be between 1 and 4294967295");
     }
@@ -87,28 +88,30 @@ export const FreePikGenrateImageFlux = asyncHandler(async (req, res) => {
         const { data } = await FREEPIK_API.post('/text-to-image/flux-dev', payload);
 
         // Step 2: Poll for results
-        const imageUrls = await pollFreepikStatus(data.data.task_id);
+        const imageUrl = await pollFreepikStatus(data.data.task_id);
 
-        // Step 3: Upload to Cloudinary (optional)
-        const cloudinaryUrls = await Promise.all(
-            imageUrls.map(url => uploadFromUrl(url, 'freepik/flux'))
-        );
+        // Step 3: Upload to Cloudinary 
+        const cloudinaryUrl = await uploadFromUrl(imageUrl, 'freepik/flux')
 
-        // Step 4: Return response
+        // Step 4: Store image in the database 
+        const image = await Image.create({
+            user: req.user._id,
+            prompt : prompt.trim(),
+            imageUrl: cloudinaryUrl,
+        });
+        // Step 5 : Return response 
         return res.status(HTTP_STATUS_CODES.OK.code).json(
             new ApiResponse(
                 HTTP_STATUS_CODES.OK.code,
                 {
-                    taskId: data.data.task_id,
-                    originalUrls: imageUrls,
-                    cloudinaryUrls: cloudinaryUrls || null
+                    image
                 },
                 "Images generated successfully"
             )
         );
 
     } catch (error) {
-        // console.log(error)
+        // console.log("error 1", error);
         // console.log(error.response?.data)
         // Enhanced error handling
         const statusCode = error.response?.status || HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR.code;
@@ -143,7 +146,7 @@ export const FreePikGenerateImageClassicFast = asyncHandler(async (req, res) => 
         framing = "portrait",
         lightning = "dramatic",
         style = "photo",
-        colors = [],
+        colors = [], // "colors":[{"color":"#FF0000","weight":0.5}]} 0.05 <= x <= 1
         seed = null,
         negative_prompt = '',
         guidance_scale = 1.0, //[0.0, 2.0]
@@ -208,9 +211,19 @@ export const FreePikGenerateImageClassicFast = asyncHandler(async (req, res) => 
             })
         );
 
+        const Images = await Promise.all(
+            processedImages.map(async (img) => {
+                return await Image.create({
+                    user: req.user._id,
+                    prompt: prompt.trim(),
+                    imageUrl: img.url,
+                });
+            })
+        );
+
         return res.status(200).json(
             new ApiResponse(200, {
-                images: processedImages,
+                Images ,
                 meta: {
                     seed: data.meta.seed,
                     guidance_scale: data.meta.guidance_scale,
@@ -221,10 +234,10 @@ export const FreePikGenerateImageClassicFast = asyncHandler(async (req, res) => 
         );
 
     } catch (error) {
-        console.log(error.response?.data)
+        // console.log('erorr', error)
         throw new ApiError(
             error.response?.status || 500,
-            error.message || "Image generation failed",
+            error.response?.data?.message || "Image generation failed",
             {
                 apiError: error.response?.data,
                 requestParameters: req.body

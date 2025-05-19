@@ -8,8 +8,9 @@ const imageSchema = new mongoose.Schema({
         required: true
     },
     prompt: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Prompt'
+        type: String,
+        required: true,
+
     },
     imageUrl: {
         type: String,
@@ -17,8 +18,10 @@ const imageSchema = new mongoose.Schema({
     },
     isDeleted: {
         type: Boolean,
-        default: false
+        default: false,
+        select: false,
     }
 }, { timestamps: true });
 
-export const Image = mongoose.model('Image', imageSchema);
+const Image = mongoose.model('Image', imageSchema);
+export default Image;

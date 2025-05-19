@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
+// import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,27 +17,65 @@ import {
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import {
-  aspectRatios,
-  FREEPIK_IMAGE_GENERATION_OPTIONS as OPTIONS,
+  FREEPIK_CLASSIC_FAST_OPTIONS,
+  FREEPIK_FLUX_OPTIONS,
+  fluxAspectRatios,
+  classicFastAspectRatios,
 } from "@/lib/freePikOptions";
 import api from "@/lib/api-client";
 
+interface ColorOption {
+  color: string;
+  weight: number;
+}
+
 export default function ImageGeneratorPage() {
   const [prompt, setPrompt] = useState("");
+  const [negativePrompt, setNegativePrompt] = useState("");
   const [model, setModel] = useState("standard");
   const [aspectRatio, setAspectRatio] = useState("square_1_1");
-  const [style, setStyle] = useState(OPTIONS.styles[0]);
-  const [colorEffect, setColorEffect] = useState(OPTIONS.color_effects[0]);
-  const [lightingEffect, setLightingEffect] = useState(
-    OPTIONS.lightning_effects[0]
-  );
-  const [framingEffect, setFramingEffect] = useState(
-    OPTIONS.framing_effects[0]
-  );
-  const [color, setColor] = useState(OPTIONS.colors[0]);
-  const [imageUrl, setImageUrl] = useState("");
+  const [style, setStyle] = useState("");
+  const [colorEffect, setColorEffect] = useState("");
+  const [lightingEffect, setLightingEffect] = useState("");
+  const [framingEffect, setFramingEffect] = useState("");
+  const [colors, setColors] = useState<ColorOption[]>([]);
+  const [imageUrl, setImageUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Determine which options to use based on model selection
+  const OPTIONS =
+    model === "standard" ? FREEPIK_CLASSIC_FAST_OPTIONS : FREEPIK_FLUX_OPTIONS;
+  const currentAspectRatios =
+    model === "standard" ? classicFastAspectRatios : fluxAspectRatios;
+
+  // Initialize default values whenever model changes
+  useEffect(() => {
+    // Set defaults based on available options for the selected model
+    if (model === "standard") {
+      // Classic Fast defaults
+      setStyle(FREEPIK_CLASSIC_FAST_OPTIONS.styles[0]);
+      setColorEffect(FREEPIK_CLASSIC_FAST_OPTIONS.color_effects[0]);
+      setLightingEffect(FREEPIK_CLASSIC_FAST_OPTIONS.lightning_effects[0]);
+      setFramingEffect(FREEPIK_CLASSIC_FAST_OPTIONS.framing_effects[0]);
+    } else {
+      // Flux defaults
+      setColorEffect(FREEPIK_FLUX_OPTIONS.color_effects[0]);
+      setFramingEffect(FREEPIK_FLUX_OPTIONS.framing_effects[0]);
+      setLightingEffect(FREEPIK_FLUX_OPTIONS.lightning_effects[0]);
+      // Clear color since structure is different
+      setColors([]);
+      // Reset style since it's not available in Flux
+      setStyle("");
+      // Clear negative prompt since it's not used in Flux
+      setNegativePrompt("");
+    }
+
+    // Check if current aspect ratio is available in the new model
+    if (!OPTIONS.aspect_ratios.includes(aspectRatio)) {
+      setAspectRatio(OPTIONS.aspect_ratios[0]);
+    }
+  }, [model]);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -45,11 +83,61 @@ export default function ImageGeneratorPage() {
     setImageUrl("");
 
     try {
-      const res = await api.post("", {
-       
-      });
+      let requestData;
+      let endpoint;
+
+      if (model === "standard") {
+        // For Classic Fast API
+        endpoint = "/freepik/generate/classic-fast";
+        requestData = {
+          prompt,
+          aspect_ratio: aspectRatio,
+          color: colorEffect,
+          style: style,
+          framing: framingEffect,
+          lightning: lightingEffect,
+          colors,
+          guidance_scale: parseFloat((Math.random() * 2).toFixed(1)),
+          num_images: 1,
+          seed: Math.floor(Math.random() * 1000000),
+        };
+      } else {
+        // For Flux API
+        endpoint = "/freepik/generate/flux";
+        requestData = {
+          prompt,
+          aspect_ratio: aspectRatio,
+          styling: {
+            effects: {
+              color: colorEffect,
+              framing: framingEffect,
+              lightning: lightingEffect,
+            },
+          },
+          seed: Math.floor(Math.random() * 2147483648), // Random seed
+        };
+
+        // Colors are optional in Flux API
+        if (colors) {
+          // requestData.styling.colors = [
+          //   {
+          //     color: color,
+          //     weight: 0.5
+          //   }
+          // ];
+        }
+      }
+
+      // For  might want development purposes, youto use a proxy API route
+      // instead of directly calling the Freepik API from the client
+      const res = await api.post(`${endpoint}`, requestData);
+
+      // Assuming the API returns the image URL in the response
+      console.log("resdata", res.data);
+      setImageUrl(res.data?.data?.Images[0]?.imageUrl);
     } catch (err) {
       setError("Something went wrong.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -72,6 +160,19 @@ export default function ImageGeneratorPage() {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Enter your prompt..."
             />
+
+            {model === "standard" && (
+              <div className="mt-2">
+                <Label>Negative Prompt (Optional)</Label>
+                <Textarea
+                  className="bg-[#1c1b29] text-white border-none min-h-[60px] mt-1"
+                  value={negativePrompt}
+                  onChange={(e) => setNegativePrompt(e.target.value)}
+                  placeholder="What to exclude (e.g., b&w, cartoon, ugly)"
+                />
+              </div>
+            )}
+
             <Button
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
               onClick={handleGenerate}
@@ -83,22 +184,42 @@ export default function ImageGeneratorPage() {
             {error && <p className="text-red-500 text-sm">{error}</p>}
           </div>
 
+          {/* MODEL SELECTION */}
+          <div>
+            <Label className="p-2">Model</Label>
+            <Select value={model} onValueChange={setModel}>
+              <SelectTrigger className="bg-[#1c1b29] text-white border-none">
+                <SelectValue placeholder="Select model" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1c1b29] text-white border-none">
+                <SelectItem value="standard">Standard</SelectItem>
+                <SelectItem value="hd">HD</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* THREE-COLUMN SELECTOR GRID */}
           <div className="grid grid-cols-3 gap-4">
             {/* COLUMN 1 */}
             <div className="space-y-4">
-              <div>
-                <Label className="p-2">Model</Label>
-                <Select value={model} onValueChange={setModel}>
-                  <SelectTrigger className="bg-[#1c1b29] text-white border-none">
-                    <SelectValue placeholder="Select model" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1c1b29] text-white border-none">
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="hd">HD</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Style selector - only show for standard model */}
+              {model === "standard" && (
+                <div>
+                  <Label className="p-2">Style</Label>
+                  <Select value={style} onValueChange={setStyle}>
+                    <SelectTrigger className="bg-[#1c1b29] text-white border-none">
+                      <SelectValue placeholder="Select style" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1c1b29] text-white border-none max-h-[300px]">
+                      {FREEPIK_CLASSIC_FAST_OPTIONS.styles.map((styleItem) => (
+                        <SelectItem key={styleItem} value={styleItem}>
+                          {styleItem}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div>
                 <Label className="p-2">Color Effect</Label>
@@ -119,22 +240,6 @@ export default function ImageGeneratorPage() {
 
             {/* COLUMN 2 */}
             <div className="space-y-4">
-              <div>
-                <Label className="p-2">Style</Label>
-                <Select value={style} onValueChange={setStyle}>
-                  <SelectTrigger className="bg-[#1c1b29] text-white border-none">
-                    <SelectValue placeholder="Select style" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1c1b29] text-white border-none max-h-[300px]">
-                    {OPTIONS.styles.map((styleItem) => (
-                      <SelectItem key={styleItem} value={styleItem}>
-                        {styleItem}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div>
                 <Label className="p-2">Lighting</Label>
                 <Select
@@ -185,7 +290,7 @@ export default function ImageGeneratorPage() {
                 onValueChange={(value) => value && setAspectRatio(value)}
                 className="flex gap-3"
               >
-                {aspectRatios.map(({ label, value, icon: Icon }) => (
+                {currentAspectRatios.map(({ label, value, icon: Icon }) => (
                   <ToggleGroupItem
                     key={value}
                     value={value}
@@ -199,28 +304,24 @@ export default function ImageGeneratorPage() {
             </div>
           </div>
 
-          {/* COLOR PICKER */}
-          <div>
-            <Label className="p-2">Accent Color</Label>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {OPTIONS.colors.map((colorHex) => (
-                <button
-                  key={colorHex}
-                  onClick={() => setColor(colorHex)}
-                  className={`w-6 h-6 rounded-full border ${
-                    color === colorHex
-                      ? "border-white ring-2 ring-purple-500"
-                      : "border-gray-300"
-                  }`}
-                  style={{ backgroundColor: colorHex }}
-                  title={colorHex}
-                />
-              ))}
+          {/* COLOR PICKER - only show for standard model */}
+          {model === "standard" && (
+            <div>
+              <Label className="p-2">Accent Color</Label>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {/* {FREEPIK_CLASSIC_FAST_OPTIONS.colors.map((colorObj) => (
+                  <button
+                    key={colorObj.color}
+                    style={{ backgroundColor: colorObj.color }}
+                    title={colorObj.color}
+                  />
+                ))} */}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* RIGHT PANEL - IMAGE PREVIEW (40%) */}
+        {/* RIGHT PANEL - IMAGE PREVIEW (50%) */}
         <div className="md:w-[50%] p-4">
           <Card className="bg-[#1c1b29] h-full">
             <CardContent className="flex justify-center items-center w-full h-full p-4 aspect-square">
