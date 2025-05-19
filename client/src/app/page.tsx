@@ -1,7 +1,8 @@
 "use client";
 import GetLoginUser from "@/components/GetLoginUser";
 import Header from "@/components/Header";
-import HomePage from "@/components/HomePage";
+import ImageGeneratorPage from "@/components/HomePage/ImageGeneratorPage";
+import HomePage from "@/components/HomePage/ImageGeneratorPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FullPageLoader } from "@/components/ui/loader";
 import { useEffect, useState } from "react";
@@ -20,7 +21,7 @@ export default function Home() {
     <>
       <ProtectedRoute>
         <Header />
-        <HomePage />
+        <ImageGeneratorPage />
       </ProtectedRoute>
     </>
   );
