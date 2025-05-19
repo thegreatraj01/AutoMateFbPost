@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { clearUser } from "@/store/slices/userSlice";
+import api from "@/lib/api-client";
+import { toast } from "sonner";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -23,17 +25,21 @@ export default function Header() {
   const showLogin = pathname === "/sign_up";
   const showLogout = user && pathname !== "/sign_up";
 
-  const handleLogout = () => {
-    dispatch(clearUser());
-    // Optional: clear tokens from cookies/localStorage if you're using them
-    // localStorage.removeItem("token"); 
-    // Redirect to login page or home
+  const handleLogout = async () => {
+    const res = await api.post("/auth/logout");
+    if (res.status === 200) {
+      toast.success("User logedOut successfully");
+      dispatch(clearUser());
+    }
     router.push("/login");
   };
 
   return (
     <header className="bg-white shadow">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Global">
+      <nav
+        className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8"
+        aria-label="Global"
+      >
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5">
             <span className="sr-only">Automate Things</span>
@@ -51,7 +57,11 @@ export default function Header() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <span className="sr-only">Open main menu</span>
-            {mobileMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" aria-hidden="true" />
+            ) : (
+              <Menu className="h-6 w-6" aria-hidden="true" />
+            )}
           </button>
         </div>
 
@@ -107,7 +117,11 @@ export default function Header() {
                 </Button>
               )}
               {showLogout && (
-                <Button className="w-full" variant="destructive" onClick={handleLogout}>
+                <Button
+                  className="w-full"
+                  variant="destructive"
+                  onClick={handleLogout}
+                >
                   Logout
                 </Button>
               )}

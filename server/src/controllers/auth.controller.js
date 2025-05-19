@@ -349,6 +349,26 @@ export const facebookCallback = asyncHandler(async (req, res) => {
 
 
 // Optional logout
+
 export const logout = asyncHandler(async (req, res) => {
-  return res.status(200).json(new ApiResponse(200, null, "Logged out"));
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    return res.status(404).json(new ApiResponse(404, null, "User not found"));
+  }
+
+  user.refreshToken = null;
+  await user.save();
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    expires: new Date(0), // expire the cookies immediately
+  };
+
+  res
+    .status(200)
+    .cookie("accessToken", "", options)
+    .cookie("refreshToken", "", options)
+    .json(new ApiResponse(200, null, "Logged out"));
 });
