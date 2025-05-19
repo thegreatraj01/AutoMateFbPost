@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api-client";
 import { setUser } from "@/store/slices/userSlice";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { useAppDispatch } from "@/hooks/reduxHooks";
 import { useRouter } from "next/navigation";
 import { FullPageLoader } from "@/components/ui/loader"; 
 
@@ -11,7 +11,7 @@ function GetLoginUser({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const user = useAppSelector((state) => state.user.user);
+  // const user = useAppSelector((state) => state.user.user);
 
   useEffect(() => {
     const fetchLoginUser = async () => {

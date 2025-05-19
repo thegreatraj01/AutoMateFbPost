@@ -21,7 +21,6 @@ import {
   classicFastAspectRatios,
 } from "@/lib/freePikOptions";
 import api from "@/lib/api-client";
-import { set } from "react-hook-form";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
 
@@ -52,7 +51,7 @@ export default function ClassicGenerator() {
   const [newWeight, setNewWeight] = useState(0.5);
   const [filterNsfw, setFilterNsfw] = useState(true);
 
-  const handleToggle = (checked: boolean) => {
+  const handleToggle = () => {
     setFilterNsfw(!filterNsfw);
     console.log(filterNsfw);
   };
@@ -87,9 +86,20 @@ export default function ClassicGenerator() {
         // setNegativePrompt("");
         // setColors([]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (!err) return;
+
       setError("Something went wrong.");
-      toast.error(err.response?.data?.message || "Something went wrong");
+
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const errorResponse = err as {
+          response?: { data?: { message?: string } };
+        };
+        const message = errorResponse.response?.data?.message;
+        toast.error(message || "Something went wrong");
+      } else {
+        toast.error("Something went wrong");
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -124,7 +134,7 @@ export default function ClassicGenerator() {
     if (colorExists) return; // prevent duplicate colors
     if (colors.length >= 4) {
       toast.error("Max 4 colours are accepted");
-      return ;
+      return;
     }
 
     setColors((prev) => [...prev, { color: newColor, weight: newWeight }]);
