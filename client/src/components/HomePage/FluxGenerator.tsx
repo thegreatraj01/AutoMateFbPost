@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { isAxiosError } from "axios";
 
 interface ColorOption {
   color: string;
@@ -75,29 +76,14 @@ export default function FluxGenerator() {
       const res = await api.post("/freepik/generate/flux", requestData);
       setImageUrl(res.data?.data?.image?.imageUrl);
     } catch (err: unknown) {
-      setError("Something went wrong.");
-
-      // Safely check if it's an AxiosError (or similar)
-      if (
-        typeof err === "object" &&
-        err !== null &&
-        "response" in err &&
-        typeof (err as any).response === "object"
-      ) {
-        const axiosErr = err as {
-          response?: {
-            data?: {
-              message?: string;
-            };
-          };
-        };
-
-        toast.error(axiosErr.response?.data?.message || "Something went wrong");
-      } else {
-        toast.error("Something went wrong");
+      // console.error(err);
+      if (!err) return;
+      let msg = "Something went wrong";
+      if (isAxiosError(err) && err.response?.data?.message) {
+        msg = err.response.data.message;
       }
-
-      console.error(err);
+      toast.error(msg);
+      setError(msg);
     } finally {
       setLoading(false);
     }

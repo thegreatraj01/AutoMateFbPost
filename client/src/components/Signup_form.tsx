@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/types/redux";
 import { setUser } from "@/store/slices/userSlice";
+import { isAxiosError } from "axios";
 
 // Schema without confirmPassword
 const formSchema = z.object({
@@ -74,9 +75,12 @@ export default function SignUpForm({
         form.reset();
         router.push("/");
       }
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.message || "Registration failed. Try again.";
+    } catch (error: unknown) {
+      if (!error) return;
+      let msg = "Registration failed. Try again.";
+      if (isAxiosError(error) && error?.response?.data?.message) {
+        msg = error.response.data.message;
+      }
       toast.error(msg);
     } finally {
       setLoading(false);

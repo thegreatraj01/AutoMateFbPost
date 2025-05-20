@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../types/redux";
 import { setUser } from "@/store/slices/userSlice";
+import { isAxiosError } from "axios";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -66,10 +67,13 @@ export default function LoginForm({
         form.reset();
         router.push("/");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // console.log(error);
-      const msg =
-        error?.response?.data?.message || "Something went wrong. Try again.";
+      if (!error) return;
+      let msg = "Something went wrong. Try again.";
+      if (isAxiosError(error) && error?.response?.data?.message) {
+        msg = error.response.data.message;
+      }
       toast.error(msg);
     } finally {
       setLoading(false);

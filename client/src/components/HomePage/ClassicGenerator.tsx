@@ -23,6 +23,7 @@ import {
 import api from "@/lib/api-client";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
+import { isAxiosError } from "axios";
 
 interface ColorOption {
   color: string;
@@ -88,18 +89,11 @@ export default function ClassicGenerator() {
       }
     } catch (err: unknown) {
       if (!err) return;
-
-      setError("Something went wrong.");
-
-      if (typeof err === "object" && err !== null && "response" in err) {
-        const errorResponse = err as {
-          response?: { data?: { message?: string } };
-        };
-        const message = errorResponse.response?.data?.message;
-        toast.error(message || "Something went wrong");
-      } else {
-        toast.error("Something went wrong");
+      let msg = "Something went wrong.";
+      if (isAxiosError(err) && err.response?.data?.message) {
+        msg = err.response.data.message;
       }
+      setError(msg);
       console.error(err);
     } finally {
       setLoading(false);
