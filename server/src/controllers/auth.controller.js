@@ -12,7 +12,13 @@ import axios from "axios";
 
 const { FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, FACEBOOK_REDIRECT_URI } = process.env;
 
-
+const options = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // Must be `true` in production
+  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // Critical!
+  // maxAge: 7 * 24 * 60 * 60 * 1000, 
+  path: "/", // Ensure cookies are sent for all routes
+};
 
 // controller for verifyuser email 
 export const verifyEmail = asyncHandler(async (req, res) => {
@@ -77,10 +83,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   // await generateTokenForEmailVerification(newUser);
 
   const { accessToken, refreshToken } = await genrateAccessAndRefreshTokens(newUser._id);
-  const options = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-  };
+ 
 
   res.status(201)
     .cookie('accessToken', accessToken, options)
@@ -124,11 +127,6 @@ export const loginUser = asyncHandler(async (req, res) => {
   // }
 
   const { accessToken, refreshToken } = await genrateAccessAndRefreshTokens(user._id);
-
-  const options = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-  };
 
   return res.status(200)
     .cookie('accessToken', accessToken, options)
