@@ -11,7 +11,6 @@ function GetLoginUser({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  // const user = useAppSelector((state) => state.user.user);
 
   useEffect(() => {
     const fetchLoginUser = async () => {
