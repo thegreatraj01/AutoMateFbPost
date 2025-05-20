@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ReduxProvider from "@/providers/ReduxProvider";
 import GetLoginUser from "@/components/GetLoginUser";
+import ConnectToServer from "@/components/ConnectToServer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,9 @@ export default function RootLayout({
       >
         <Toaster position="top-right" richColors swipeDirections={["left"]} />
         <ReduxProvider>
-          <GetLoginUser>{children}</GetLoginUser>
+          <ConnectToServer>
+            <GetLoginUser>{children}</GetLoginUser>
+          </ConnectToServer>
         </ReduxProvider>
       </body>
     </html>

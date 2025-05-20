@@ -68,7 +68,7 @@ export default function LoginForm({
         router.push("/");
       }
     } catch (error: unknown) {
-      // console.log(error);
+      console.log(error);
       if (!error) return;
       let msg = "Something went wrong. Try again.";
       if (isAxiosError(error) && error?.response?.data?.message) {

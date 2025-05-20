@@ -13,18 +13,8 @@ import axios from "axios";
 const { FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, FACEBOOK_REDIRECT_URI } = process.env;
 
 
-// this function will genrate token and send it to user email
-const genrateTokenForEmailVerification = async (user) => {
-  const token = jwt.sign(
-    { userId: user._id },
-    process.env.EMAIL_VERIFICATION_SECRET,
-    { expiresIn: '15m' }
-  );
-  const verificationUrl = `${process.env.FRONTEND_URL}?token=${token}`;
 
-  await sendVerificationEmail(user.email, user.fullName, verificationUrl);
-}
-
+// controller for verifyuser email 
 export const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.query;
 
@@ -51,6 +41,8 @@ export const verifyEmail = asyncHandler(async (req, res) => {
   }
 });
 
+
+// this function will genrate token and send it to user email
 const generateTokenForEmailVerification = async (user) => {
   const token = jwt.sign(
     { userId: user._id },
@@ -82,7 +74,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   });
 
   // this function will genrate a token and send it to user email
-  await generateTokenForEmailVerification(newUser);
+  // await generateTokenForEmailVerification(newUser);
 
   const { accessToken, refreshToken } = await genrateAccessAndRefreshTokens(newUser._id);
   const options = {
@@ -119,7 +111,7 @@ export const loginUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ email: email.trim().toLowerCase() });
   if (!user) {
-    throw new ApiError(401, "Invalid email or password.");
+    throw new ApiError(401, "User not found create a new account.");
   }
 
   const isMatch = await user.isPasswordCorrect(password);
