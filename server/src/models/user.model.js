@@ -106,8 +106,8 @@ UserSchema.methods.generateRefreshToken = function () {
 };
 
 
-UserSchema.methods.sendVerificationEmail = async function (otp) {
-  await sendEmail(this.email, "Verify your email", otp);
+UserSchema.methods.sendVerificationEmail = async function (otp, subject) {
+  await sendEmail(this.email, subject, otp,);
 };
 
 

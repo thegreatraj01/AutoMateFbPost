@@ -1,17 +1,28 @@
 import express from "express";
-import { loginUser, registerUser, resendVerificationEmail, verifyEmail } from "../controllers/auth.controller.js";
+import { loginUser, registerUser, resendEmailVerificationOtp, verifyEmail, resetPassword ,sendPasswordResetOtp } from "../controllers/auth.controller.js";
 import { otpRequestLimiter } from "../middleware/rateLimter.middleware.js";
 // import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const authRouter = express.Router();
+
+
 // Register User First Time 
 authRouter.post("/register", registerUser);
+
 // Verify User Email
 authRouter.post('/verify-email', verifyEmail);
-// Resend Verification Email
-authRouter.post("/resend-verification-email", otpRequestLimiter, resendVerificationEmail);
 
+// Resend OTP to Email for email verification
+authRouter.post('/otp-request', otpRequestLimiter, resendEmailVerificationOtp);
+
+// login User
 authRouter.post("/login", loginUser);
+
+// Send otp to reset password 
+authRouter.post("/send-p-reset-otp", otpRequestLimiter, sendPasswordResetOtp);
+
+// Reset Password 
+authRouter.post("/reset-password", resetPassword);
 
 
 
