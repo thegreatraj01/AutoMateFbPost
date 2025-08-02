@@ -4,11 +4,12 @@ import authRouter from './auth.routes.js';
 import userRouter from './user.router.js';
 import freePicRouter from './FreePik.router.js';
 import healthcheckRoute from './healthcheck.routes.js';
+import { imageGenratorLimiter } from '../middleware/rateLimter.middleware.js';
 
 
 router.use("/auth" , authRouter);
 router.use('/user',userRouter);
-router.use('/freepik',freePicRouter);
+router.use('/freepik', imageGenratorLimiter ,freePicRouter);
 router.use('/healthcheck',healthcheckRoute);
 
 

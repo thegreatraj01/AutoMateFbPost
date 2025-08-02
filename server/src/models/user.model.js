@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import sendEmail from "../service/sendEmail.js";
 
 const UserSchema = new Schema(
   {
@@ -64,12 +65,7 @@ const UserSchema = new Schema(
     },
     refreshToken: {
       type: String,
-    },
-    facebookId: {
-      type: String,
-      unique: true,
-      sparse: true,
-    },
+    }
   },
   { timestamps: true }
 );
@@ -108,6 +104,13 @@ UserSchema.methods.generateRefreshToken = function () {
     { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
   );
 };
+
+
+UserSchema.methods.sendVerificationEmail = async function (otp) {
+  await sendEmail(this.email, "Verify your email", otp);
+};
+
+
 
 const User = model("User", UserSchema);
 export default User;

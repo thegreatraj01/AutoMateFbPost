@@ -1,22 +1,29 @@
 import express from "express";
-import { authFacebook, facebookCallback, loginUser, logout, registerUser, resendVerificationEmail, verifyEmail } from "../controllers/auth.controller.js";
-import { verifyJWT } from "../middleware/auth.middleware.js";
+import { loginUser, registerUser, resendVerificationEmail, verifyEmail } from "../controllers/auth.controller.js";
+import { otpRequestLimiter } from "../middleware/rateLimter.middleware.js";
+// import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const authRouter = express.Router();
-
+// Register User First Time 
 authRouter.post("/register", registerUser);
-authRouter.get('/verify-email', verifyEmail);
+// Verify User Email
+authRouter.post('/verify-email', verifyEmail);
+// Resend Verification Email
+authRouter.post("/resend-verification-email", otpRequestLimiter, resendVerificationEmail);
+
 authRouter.post("/login", loginUser);
-authRouter.post("/resend-verification-email", resendVerificationEmail);
-
-// Route: /auth/facebook
-authRouter.get('/facebook', authFacebook);
-// Route: /auth/facebook/callback
-authRouter.get("/facebook/callback", facebookCallback);
-// Route: /auth/logout
-authRouter.post("/logout", verifyJWT, logout);
-
 
 
 
 export default authRouter;
+
+
+
+
+
+// // Route: /auth/facebook
+// authRouter.get('/facebook', authFacebook);
+// // Route: /auth/facebook/callback
+// authRouter.get("/facebook/callback", facebookCallback);
+// // Route: /auth/logout
+// authRouter.post("/logout", verifyJWT, logout);
