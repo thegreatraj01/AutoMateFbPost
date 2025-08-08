@@ -149,3 +149,4 @@ export const FREEPIK_CLASSIC_FAST_OPTIONS = {
         }
     ]
 };
+

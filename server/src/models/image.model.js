@@ -10,18 +10,48 @@ const imageSchema = new mongoose.Schema({
     prompt: {
         type: String,
         required: true,
-
+        maxlength: 1000
+    },
+    negative_prompt: {
+        type: String,
+        maxlength: 1000
     },
     imageUrl: {
         type: String,
         required: true
     },
+    provider: {
+        type: String,
+        enum: ['freepik'],
+        default: 'freepik',
+        // required: true
+    },
+    model: {
+        type: String,
+        enum: ['classic-fast', 'flux-dev', 'imagen3', 'mystic'],
+        required: true
+    },
+    parameters: {
+        type: mongoose.Schema.Types.Mixed  // Flexible object for any parameters
+    },
+    has_nsfw: {
+        type: Boolean,
+        default: false
+    },
     isDeleted: {
         type: Boolean,
         default: false,
-        select: false,
+        select: false
     }
-}, { timestamps: true });
+}, { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+// Index for better query performance
+imageSchema.index({ user: 1, createdAt: -1 });
+imageSchema.index({ provider: 1, model: 1 });
 
 const Image = mongoose.model('Image', imageSchema);
 export default Image;
