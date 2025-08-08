@@ -1,13 +1,18 @@
 import express from 'express';
-// import { FreePikGenerateImageClassicFast, FreePikGenrateImageFlux } from '../controllers/FreePik.controller.js';
-import { FreePikGenerateImageClassicFast, getFreepikClassicFastOptions } from '../controllers/FreePik/classicFast.controller.js';
 import { verifyJWT } from '../middleware/auth.middleware.js';
+import { FreePikGenerateImageClassicFast, getFreepikClassicFastOptions } from '../controllers/FreePik/classicFast.controller.js';
+import { FreePikGenerateImageFluxDev, getFreepikFluxDevOptions } from '../controllers/FreePik/fluxDev.controller.js';
 
-const freePicRouter = express.Router();
+const freePikRouter = express.Router();
 
-// POST /api/freepik/generate
-freePicRouter.route('/generate/classic-fast').post(verifyJWT, FreePikGenerateImageClassicFast);
-freePicRouter.route('/get/classic-fast-option').get(verifyJWT, getFreepikClassicFastOptions);
-// freePicRouter.route('/generate/flux').post(verifyJWT, FreePikGenrateImageFlux);
+// POST /api/freepik/generate/classic-fast
+freePikRouter.route('/generate/classic-fast').post(verifyJWT, FreePikGenerateImageClassicFast);
+// GET /api/freepik/generate/classic-fast
+freePikRouter.route('/get/classic-fast-option').get(verifyJWT, getFreepikClassicFastOptions);
 
-export default freePicRouter;
+// POST /api/freepik/generate/flux-dev
+freePikRouter.route('/generate/flux-dev').post(verifyJWT, FreePikGenerateImageFluxDev);
+// GET /api/freepik/get/flux-dev-option
+freePikRouter.route('/get/flux-dev-option').get(verifyJWT,getFreepikFluxDevOptions);
+
+export default freePikRouter;

@@ -145,7 +145,7 @@ export const FreePikGenerateImageClassicFast = asyncHandler(async (req, res) => 
 
         // Extract images array
         let processedImages = data.data || [];
-        console.log(data);
+        // console.log(data);
 
         // Validate we received images
         if (!Array.isArray(processedImages) || processedImages.length === 0) {
