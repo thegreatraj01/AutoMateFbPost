@@ -278,8 +278,7 @@ export const FreePikGenerateImageFluxDev = asyncHandler(async (req, res) => {
                 seed,
                 custom_colors,
                 task_id: taskId
-            },
-            dimensions: aspect_ratio // Flux Dev doesn't return exact dimensions
+            }
         });
 
         // Step 5: Return successful response

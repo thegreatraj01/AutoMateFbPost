@@ -2,6 +2,7 @@ import express from 'express';
 import { verifyJWT } from '../middleware/auth.middleware.js';
 import { FreePikGenerateImageClassicFast, getFreepikClassicFastOptions } from '../controllers/FreePik/classicFast.controller.js';
 import { FreePikGenerateImageFluxDev, getFreepikFluxDevOptions } from '../controllers/FreePik/fluxDev.controller.js';
+import { FreePikGenerateImageImagen3, getFreepikImagen3Options } from '../controllers/FreePik/imagen3.controller.js';
 
 const freePikRouter = express.Router();
 
@@ -14,5 +15,10 @@ freePikRouter.route('/get/classic-fast-option').get(verifyJWT, getFreepikClassic
 freePikRouter.route('/generate/flux-dev').post(verifyJWT, FreePikGenerateImageFluxDev);
 // GET /api/freepik/get/flux-dev-option
 freePikRouter.route('/get/flux-dev-option').get(verifyJWT,getFreepikFluxDevOptions);
+
+// POST /api/freepik/generate/imagen
+freePikRouter.route('/generate/imagen').post(verifyJWT,FreePikGenerateImageImagen3);
+// GET /api/freepik/get/imagen-option
+freePikRouter.route('/get/imagen-option').get(verifyJWT,getFreepikImagen3Options);
 
 export default freePikRouter;
