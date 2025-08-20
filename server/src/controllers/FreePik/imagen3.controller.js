@@ -244,8 +244,8 @@ const validateImagen3Inputs = ({
         throw new ApiError(400, "Prompt is required and cannot be empty");
     }
 
-    if (prompt.trim().length > 1000) {
-        throw new ApiError(400, "Prompt must be less than 1000 characters");
+    if (prompt.trim().length > 2000) {
+        throw new ApiError(400, "Prompt must be less than 2000 characters");
     }
 
     // Numeric validations
@@ -259,27 +259,27 @@ const validateImagen3Inputs = ({
         throw new ApiError(400, `Invalid aspect ratio. Available options: ${FREEPIK_IMAGEN3_OPTIONS.aspect_ratios.join(', ')}`);
     }
 
-    if (!FREEPIK_IMAGEN3_OPTIONS.styles.includes(style)) {
+    if (style && !FREEPIK_IMAGEN3_OPTIONS.styles.includes(style)) {
         throw new ApiError(400, `Invalid style. Available options: ${FREEPIK_IMAGEN3_OPTIONS.styles.join(', ')}`);
     }
 
-    if (!FREEPIK_IMAGEN3_OPTIONS.color_effects.includes(color_effect)) {
+    if (color_effect && !FREEPIK_IMAGEN3_OPTIONS.color_effects.includes(color_effect)) {
         throw new ApiError(400, `Invalid color effect. Available options: ${FREEPIK_IMAGEN3_OPTIONS.color_effects.join(', ')}`);
     }
 
-    if (!FREEPIK_IMAGEN3_OPTIONS.lightning_effects.includes(lightning_effect)) {
+    if (lightning_effect && !FREEPIK_IMAGEN3_OPTIONS.lightning_effects.includes(lightning_effect)) {
         throw new ApiError(400, `Invalid lightning effect. Available options: ${FREEPIK_IMAGEN3_OPTIONS.lightning_effects.join(', ')}`);
     }
 
-    if (!FREEPIK_IMAGEN3_OPTIONS.framing_effects.includes(framing_effect)) {
+    if (framing_effect && !FREEPIK_IMAGEN3_OPTIONS.framing_effects.includes(framing_effect)) {
         throw new ApiError(400, `Invalid framing effect. Available options: ${FREEPIK_IMAGEN3_OPTIONS.framing_effects.join(', ')}`);
     }
 
-    if (!FREEPIK_IMAGEN3_OPTIONS.person_generation.includes(person_generation)) {
+    if (person_generation && !FREEPIK_IMAGEN3_OPTIONS.person_generation.includes(person_generation)) {
         throw new ApiError(400, `Invalid person generation setting. Available options: ${FREEPIK_IMAGEN3_OPTIONS.person_generation.join(', ')}`);
     }
 
-    if (!FREEPIK_IMAGEN3_OPTIONS.safety_settings.includes(safety_settings)) {
+    if (safety_settings && !FREEPIK_IMAGEN3_OPTIONS.safety_settings.includes(safety_settings)) {
         throw new ApiError(400, `Invalid safety settings. Available options: ${FREEPIK_IMAGEN3_OPTIONS.safety_settings.join(', ')}`);
     }
 };
@@ -307,13 +307,13 @@ export const FreePikGenerateImageImagen3 = asyncHandler(async (req, res) => {
     const {
         prompt,
         num_images = 1,
-        aspect_ratio = "square_1_1",
-        style = "anime",
-        color_effect = "pastel",
-        lightning_effect = "warm",
-        framing_effect = "portrait",
-        person_generation = "allow_adult",
-        safety_settings = "block_low_and_above"
+        aspect_ratio,
+        style,
+        color_effect,
+        lightning_effect,
+        framing_effect,
+        person_generation,
+        safety_settings,
     } = req.body;
 
     // Input Validation
@@ -482,7 +482,7 @@ export const getFreepikImagen3Options = asyncHandler(async (req, res) => {
                         "type": "string",
                         "required": true,
                         "description": "Main image description",
-                        "max_length": 1000,
+                        "max_length": 2000,
                         "example": "A majestic dragon flying over a medieval castle at sunset"
                     },
                     "num_images": {

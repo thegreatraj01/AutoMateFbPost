@@ -10,7 +10,7 @@ const imageSchema = new mongoose.Schema({
     prompt: {
         type: String,
         required: true,
-        maxlength: 1000
+        maxlength: 2000
     },
     negative_prompt: {
         type: String,

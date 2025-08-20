@@ -296,8 +296,8 @@ const validateInputs = ({
         throw new ApiError(400, "Prompt is required and cannot be empty");
     }
 
-    if (prompt.trim().length > 1000) {
-        throw new ApiError(400, "Prompt must be less than 1000 characters");
+    if (prompt.trim().length > 2000) {
+        throw new ApiError(400, "Prompt must be less than 2000 characters");
     }
 
     // Numeric validations
@@ -382,7 +382,7 @@ export const getFreepikClassicFastOptions = asyncHandler(async (req, res) => {
                         "type": "string",
                         "required": true,
                         "description": "Main image description",
-                        "max_length": 1000,
+                        "max_length": 2000,
                         "example": "A majestic dragon flying over a medieval castle at sunset"
                     },
                     "negative_prompt": {

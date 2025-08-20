@@ -3,6 +3,7 @@ import { verifyJWT } from '../middleware/auth.middleware.js';
 import { FreePikGenerateImageClassicFast, getFreepikClassicFastOptions } from '../controllers/FreePik/classicFast.controller.js';
 import { FreePikGenerateImageFluxDev, getFreepikFluxDevOptions } from '../controllers/FreePik/fluxDev.controller.js';
 import { FreePikGenerateImageImagen3, getFreepikImagen3Options } from '../controllers/FreePik/imagen3.controller.js';
+import { FreePikGenerateImageMystic } from '../controllers/FreePik/mystic.controller.js';
 
 const freePikRouter = express.Router();
 
@@ -21,4 +22,6 @@ freePikRouter.route('/generate/imagen').post(verifyJWT,FreePikGenerateImageImage
 // GET /api/freepik/get/imagen-option
 freePikRouter.route('/get/imagen-option').get(verifyJWT,getFreepikImagen3Options);
 
+// POST /api/freepik/generate/mystic
+freePikRouter.route('/generate/mystic').post(verifyJWT,FreePikGenerateImageMystic);
 export default freePikRouter;
