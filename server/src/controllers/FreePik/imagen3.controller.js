@@ -138,7 +138,7 @@ const pollTaskStatus = async (taskId, endpoint = 'imagen3') => {
             console.log(`🔄 Polling attempt ${attempt}/${MAX_RETRIES} for task: ${taskId}`);
 
             const { data } = await FREEPIK_API.get(`/text-to-image/${endpoint}/${taskId}`);
-
+            console.log('poll data ', data, data.data.status);
             // Handle response based on status
             if (data.data.status === "COMPLETED") {
                 console.log(`✅ Task ${taskId} completed successfully`);
@@ -146,7 +146,8 @@ const pollTaskStatus = async (taskId, endpoint = 'imagen3') => {
             }
 
             if (data.data.status === "FAILED") {
-                throw new ApiError(500, `Image generation failed for task: ${taskId}`, {
+                console.log('status failed ')
+                throw new ApiError(500, `Image generation failed for task: ${taskId} Try Again`, {
                     task_id: taskId,
                     status: data.data.status,
                     endpoint
@@ -167,12 +168,11 @@ const pollTaskStatus = async (taskId, endpoint = 'imagen3') => {
             console.warn(`⚠️ Unexpected status: ${data.data.status} for task: ${taskId}`);
 
         } catch (error) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
             // If it's our last attempt, throw the error
             if (attempt === MAX_RETRIES) {
-                if (error instanceof ApiError) {
-                    throw error;
-                }
-
                 throw new ApiError(504, "Polling timeout - maximum retries reached", {
                     task_id: taskId,
                     attempts: attempt,
@@ -205,8 +205,8 @@ const createImagen3RequestBody = ({
     color_effect = "vibrant",
     lightning_effect = "warm",
     framing_effect = "portrait",
-    person_generation = "allow_adult",
-    safety_settings = "block_low_and_above"
+    person_generation = "allow_all",
+    safety_settings = "block_none"
 }) => {
     return {
         prompt: prompt.trim(),
@@ -255,7 +255,7 @@ const validateImagen3Inputs = ({
     }
 
     // Option validations
-    if (!FREEPIK_IMAGEN3_OPTIONS.aspect_ratios.includes(aspect_ratio)) {
+    if (aspect_ratio && !FREEPIK_IMAGEN3_OPTIONS.aspect_ratios.includes(aspect_ratio)) {
         throw new ApiError(400, `Invalid aspect ratio. Available options: ${FREEPIK_IMAGEN3_OPTIONS.aspect_ratios.join(', ')}`);
     }
 
