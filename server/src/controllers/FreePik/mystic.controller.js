@@ -22,8 +22,8 @@ import { FREEPIK_API } from "./freePik.config.js"; // Your existing axios instan
 
 
 
-// Poll Mystic task using setInterval (runs every 3 seconds by default)
-const pollMysticTask = (taskId, { intervalMs = 3000, maxAttempts = 30 } = {}) => {
+// Poll Mystic task using setInterval (runs every 4 seconds by default)
+const pollMysticTask = (taskId, { intervalMs = 4000, maxAttempts = 30 } = {}) => {
   console.log(`⏳ [Mystic] Polling started. taskId=${taskId}, intervalMs=${intervalMs}, maxAttempts=${maxAttempts}`);
 
   return new Promise((resolve, reject) => {
@@ -87,7 +87,7 @@ const buildMysticPayload = (body) => {
         style_reference,
         adherence = 50,
         hdr = 50,
-        resolution = "2k",            // "1k" | "2k" | "4k"
+        resolution = "1k",            // "1k" | "2k" | "4k"
         aspect_ratio = "square_1_1",  // e.g., "square_1_1","widescreen_16_9","traditional_3_4","classic_4_3","social_story_9_16"
         model = "realism",
         creative_detailing = 33,
@@ -297,7 +297,7 @@ export const FreePikGenerateImageMystic = async (req, res) => {
  * - Base64-encoded "style" guide image (palette, brushwork, vibe).
  * - Pair with adherence to control how closely style is applied.
  *
- * adherence (number 0–100, default 50)
+ * adherence (number 0–100, default 50) // only available when style_reference is set
  * - 0: minimal style borrow; 100: heavy style transfer.
  *
  * hdr (number 0–100, default 50)
@@ -311,13 +311,13 @@ export const FreePikGenerateImageMystic = async (req, res) => {
  * - Output ratio. Common: "square_1_1", "widescreen_16_9", "classic_4_3", "traditional_3_4", "social_story_9_16".
  * - Choose based on platform (e.g., 9:16 for Stories, 16:9 for banners).
  *
- * model (string, default "realism")
+ * model (realism, fluid, zen )
  * - AI sub-model. "realism" for photoreal results. Others may exist (artistic, fantasy, anime) per account/docs.
  *
  * creative_detailing (number 0–100, default 33)
  * - Decorative detail/microtextures level. Higher = more intricate embellishment.
  *
- * engine (string, default "automatic")
+ * engine (automatic, magnific_illusio, magnific_sharpy, magnific_sparkle)
  * - Backend refiner/upscaler:
  *   - "automatic": let API choose
  *   - "magnific_illusio" | "magnific_sharpy" | "magnific_sparkle": specialized finishing characteristics

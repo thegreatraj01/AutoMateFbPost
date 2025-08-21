@@ -55,3 +55,15 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     next(error); // Pass the error to the global error handler
   }
 });
+
+
+export const verifyAdmin = asyncHandler(async (req, res, next) => {
+  console.log('req.user', req.user);
+  if (req?.user && req.user?.email === process.env.GMAIL_USER) {
+    return next();
+  };
+  throw new ApiError(
+    403,
+    "Forbidden: You do not have permission to access this resource."
+  );
+});

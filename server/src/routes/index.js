@@ -5,12 +5,14 @@ import userRouter from './user.router.js';
 import freePikRouter from './FreePik.router.js';
 import healthcheckRoute from './healthcheck.routes.js';
 import { imageGenratorLimiter } from '../middleware/rateLimter.middleware.js';
+import historyRouter from './history.route.js';
 
 
 router.use("/auth" , authRouter);
 router.use('/user',userRouter);
 router.use('/freepik', imageGenratorLimiter ,freePikRouter);
 router.use('/healthcheck',healthcheckRoute);
+router.use('/history',historyRouter);
 
 
 export default router;
