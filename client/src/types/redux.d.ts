@@ -10,7 +10,8 @@ export interface User {
     createdAt?: string,
     updatedAt?: string
     authProvider?:string,
-    isEmailVerified?:bolean
+    isEmailVerified?:bolean,
+    avatar?:string
 }
 
 

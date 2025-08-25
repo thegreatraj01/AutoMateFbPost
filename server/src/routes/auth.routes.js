@@ -1,7 +1,7 @@
 import express from "express";
-import { loginUser, registerUser, resendEmailVerificationOtp, verifyEmail, resetPassword ,sendPasswordResetOtp } from "../controllers/auth.controller.js";
+import { loginUser, registerUser, resendEmailVerificationOtp, verifyEmail, resetPassword ,sendPasswordResetOtp, logoutUser } from "../controllers/auth.controller.js";
 import { otpRequestLimiter } from "../middleware/rateLimter.middleware.js";
-// import { verifyJWT } from "../middleware/auth.middleware.js";
+import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const authRouter = express.Router();
 
@@ -23,8 +23,8 @@ authRouter.post("/send-p-reset-otp", otpRequestLimiter, sendPasswordResetOtp);
 
 // Reset Password 
 authRouter.post("/reset-password", resetPassword);
-
-
+// Logout User
+authRouter.post("/logout", verifyJWT, logoutUser);
 
 export default authRouter;
 
@@ -36,5 +36,5 @@ export default authRouter;
 // authRouter.get('/facebook', authFacebook);
 // // Route: /auth/facebook/callback
 // authRouter.get("/facebook/callback", facebookCallback);
-// // Route: /auth/logout
-// authRouter.post("/logout", verifyJWT, logout);
+// Route: /auth/logout
+

@@ -29,6 +29,7 @@ export default function Header() {
     const res = await api.post("/auth/logout");
     if (res.status === 200) {
       toast.success("User logedOut successfully");
+      localStorage.setItem("isLogedIn", "false");
       dispatch(clearUser());
     }
     router.push("/login");

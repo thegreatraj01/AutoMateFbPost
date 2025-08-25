@@ -68,12 +68,12 @@ export default function SignUpForm({
         password: data.password,
       });
 
-      // console.log(res);
+      console.log(res);
       if (res.status === 201) {
-        toast.success("👤 Account created!");
-        dispatch(setUser(res.data.data.user));
         form.reset();
-        router.push("/");
+        router.push("/verify_email");
+        toast.success(`👤 ${res.data?.message}`);
+        dispatch(setUser(res.data?.data?.user));
       }
     } catch (error: unknown) {
       if (!error) return;
@@ -169,16 +169,12 @@ export default function SignUpForm({
               </Button>
             </form>
           </Form>
-
-          <hr className="bg-black mt-4" />
-
-          <Button variant="outline" className="w-full mt-4 bg-blue-300">
-            Login with Facebook
-          </Button>
-
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
-            <Link href="/login" className="underline underline-offset-4">
+            <Link
+              href="/login"
+              className="underline underline-offset-4 text-blue-400"
+            >
               Login
             </Link>
           </div>

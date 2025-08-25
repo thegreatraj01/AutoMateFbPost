@@ -1,10 +1,11 @@
 "use client";
 
 import Header from "@/components/Header";
-import { useAppSelector } from "@/hooks/reduxHooks";
+// import { useAppSelector } from "@/hooks/reduxHooks";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { FullPageLoader } from "@/components/ui/loader";
+// import { User } from "@/types/redux";
 
 export default function AuthLayout({
   children,
@@ -12,20 +13,16 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const user = useAppSelector((state) => state.user.user);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const isLogedIn = localStorage.getItem("isLogedIn");
+
 
   useEffect(() => {
-    if (user) {
+    console.log("islogedin form login" , isLogedIn);
+    if (isLogedIn === "true") {
       router.push("/");
-    } else {
-      setCheckingAuth(false);
     }
-  }, [user, router]);
-
-  if (checkingAuth) {
-    return <FullPageLoader />;
-  }
+  }, []);
 
   return (
     <>

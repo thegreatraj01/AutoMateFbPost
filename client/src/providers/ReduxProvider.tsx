@@ -1,10 +1,16 @@
 "use client";
 
 import { Provider } from "react-redux";
-import { store } from "../store/index";
+import { store, persistor } from "@/store";
+import { PersistGate } from "redux-persist/integration/react";
+import { FullPageLoader } from "@/components/ui/loader"; // optional
 
-function ReduxProvider({ children }: { children: React.ReactNode }) {
-  return <Provider store={store}>{children}</Provider>;
+export default function ReduxProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <Provider store={store}>
+      <PersistGate loading={<FullPageLoader />} persistor={persistor}>
+        {children}
+      </PersistGate>
+    </Provider>
+  );
 }
-
-export default ReduxProvider;

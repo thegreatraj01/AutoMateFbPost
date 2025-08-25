@@ -31,7 +31,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
   if (existingUser) {
-    throw new ApiError(409, "User with given email already exists.");
+    throw new ApiError(409, "User with given email already exists. Please Login");
   }
 
   const newUser = await User.create({
@@ -64,6 +64,7 @@ export const registerUser = asyncHandler(async (req, res) => {
           email: newUser.email,
           fullName: newUser.fullName,
           avatar: newUser.avatar,
+          isEmailVerified: newUser.isEmailVerified,
         }
       },
         'Registered successfully. Please verify your email within 10m.'
@@ -78,10 +79,13 @@ export const verifyEmail = asyncHandler(async (req, res) => {
 
   if (!otp || !email) throw new ApiError(400, 'OTP and email are required');
 
-  const user = await User.findOne({ email });
-  if (!user) {
+  const newUser = await User.findOne({ email });
+  if (!newUser) {
     throw new ApiError(404, 'User not found');
-  }
+  };
+  if (newUser.isEmailVerified) {
+    throw new ApiError(400, 'Email is already verified. Please Login');
+  };
   const otpRecord = await Otp.findOne({ email, otp });
   if (!otpRecord) {
     throw new ApiError(400, 'Invalid OTP');
@@ -90,14 +94,24 @@ export const verifyEmail = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'OTP has expired. Please request a new one.');
   }
 
-  user.isEmailVerified = true;
-  await user.save();
+  newUser.isEmailVerified = true;
+  const user = await newUser.save();
 
   // Delete the OTP record after successful verification
 
   await Otp.deleteOne({ email, otp });
 
-  res.status(200).json(new ApiResponse(200, null, 'Email verified successfully'));
+  res.status(200).json(new ApiResponse(200,
+    {
+      user: {
+        _id: user._id,
+        userName: user.userName,
+        email: user.email,
+        fullName: user.fullName,
+        avatar: user.avatar,
+        isEmailVerified: user.isEmailVerified,
+      }
+    }, 'Email verified successfully Please Login'));
 });
 
 // LOGIN CONTROLLER
@@ -135,6 +149,7 @@ export const loginUser = asyncHandler(async (req, res) => {
           email: user.email,
           fullName: user.fullName,
           avatar: user.avatar,
+          isEmailVerified: user.isEmailVerified,
         },
         accessToken,
         refreshToken,
@@ -147,7 +162,7 @@ export const loginUser = asyncHandler(async (req, res) => {
 // Resend otp to Email Controller
 export const resendEmailVerificationOtp = asyncHandler(async (req, res) => {
   const { email } = req.body;
-
+  console.log(req.body);
   if (!email) {
     throw new ApiError(400, "Email is required");
   }
@@ -175,7 +190,7 @@ export const resendEmailVerificationOtp = asyncHandler(async (req, res) => {
   };
   return res
     .status(200)
-    .json(new ApiResponse(200, null, "Verification email has been resent"));
+    .json(new ApiResponse(200, null, "Verification email has been Sent Please verify within 10m"));
 });
 
 
@@ -243,6 +258,34 @@ export const resetPassword = asyncHandler(async (req, res) => {
 });
 
 
+// Logout Controller
+/**
+ * Logout User
+ * @route POST /auth/logout
+ * @desc Logout user by clearing tokens
+ * @access Private
+ * 
+ */
+export const logoutUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
 
+  if (!user) {
+    return res.status(404).json(new ApiResponse(404, null, "User not found"));
+  }
 
+  user.refreshToken = null;
+  await user.save();
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    expires: new Date(0), // expire the cookies immediately
+  };
+
+  res
+    .status(200)
+    .cookie("accessToken", "", options)
+    .cookie("refreshToken", "", options)
+    .json(new ApiResponse(200, null, "Logged out"));
+});
 

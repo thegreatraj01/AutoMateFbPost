@@ -18,7 +18,7 @@ export const otpRequestLimiter = rateLimit({
     res.status(429).json(new ApiResponse(
       429,
       null,
-      "Too many OTP requests. Please wait 10 minutes before requesting again."
+      "Too many OTP requests. Please wait and request again."
     ));
   },
   standardHeaders: true, // Provides rate limit info in response headers
