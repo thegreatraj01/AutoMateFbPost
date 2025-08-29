@@ -11,16 +11,17 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/types/redux";
 import { setUser } from "@/store/slices/userSlice";
 
-function page() {
+function Page() {
   const loginUser = useAppSelector((state) => state.user.user);
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
   const handleChange = (value: string, index: number) => {
-    if (!/^[0-9]?$/.test(value)) return; // only allow digits
+    if (!/^[0-9]?$/.test(value)) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
@@ -56,37 +57,46 @@ function page() {
 
   const handleVerifyOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    setLoading(true);
+    setVerifying(true);
+
     const reqData = {
       email: loginUser?.email,
       otp: otp.join(""),
     };
-    // console.log(reqData);
-    if (!reqData.email) return toast.error("Email is required");
-    if (!reqData.otp) return toast.error("otp is required");
+
+    if (!reqData.email) {
+      toast.error("Email is required");
+      setVerifying(false);
+      return;
+    }
+    if (!reqData.otp) {
+      toast.error("OTP is required");
+      setVerifying(false);
+      return;
+    }
+
     try {
       const res = await api.post("auth/verify-email", reqData);
-      console.log("res", res);
       if (res.status === 200) {
         toast.success(res.data?.message);
         dispatch(setUser(res.data?.data?.user));
         router.push("/login");
       }
     } catch (error) {
-      setLoading;
       if (isAxiosError(error)) {
         toast.error(error?.response?.data?.message);
       } else {
-        console.log("Unexpected error", error);
+        console.error("Unexpected error", error);
       }
     } finally {
-      setLoading(false);
+      setVerifying(false);
     }
   };
 
   const handleResendOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    setLoading(true);
+    setResending(true);
+
     try {
       const res = await api.post("/auth/otp-request", {
         email: loginUser?.email,
@@ -95,35 +105,37 @@ function page() {
         toast.success(res.data?.message);
       }
     } catch (error) {
-      console.log(error);
-      if(isAxiosError(error)){
+      if (isAxiosError(error)) {
         toast.error(error.response?.data?.message);
+      } else {
+        console.error(error);
       }
     } finally {
-      setLoading(false);
+      setResending(false);
     }
   };
 
-  if (loginUser?.isEmailVerified) return;
+  if (loginUser?.isEmailVerified) return null;
+
   return (
     <div className="w-screen h-screen flex justify-center items-center bg-neutral-300">
       <div className="p-6 min-w-[300px] text-center bg-white">
         <div className="text-center">
-          <p>
-            <Mail className="mx-auto text-blue-500" />
-          </p>
-          <h1 className=" font-bold text-xl">Verify Your Email Address</h1>
+          <Mail className="mx-auto text-blue-500" />
+          <h1 className="font-bold text-xl">Verify Your Email Address</h1>
         </div>
         <hr />
         <div className="mt-4">
           <p>
             A verification code is sent to <br />
-            {loginUser && loginUser?.email}
+            {loginUser?.email}
           </p>
           <p className="w-92 mt-6">
             Please check your inbox and enter the verification code below to
-            verify your email address. The code will expire in 10 Minuts.
+            verify your email address. The code will expire in 10 minutes.
           </p>
+
+          {/* OTP Input */}
           <div className="flex gap-2 mt-6 justify-center">
             {otp.map((digit, index) => (
               <Input
@@ -142,20 +154,24 @@ function page() {
               />
             ))}
           </div>
+
+          {/* Buttons */}
           <div className="mt-6">
             <button
-              disabled={loading}
+              disabled={verifying}
               onClick={handleVerifyOtp}
-              className="block mx-auto w-full py-2 bg-black text-white font-semibold text-xl hover:bg-slate-900 hover:scale-x-103 duration-100 cursor-pointer"
+              className="block mx-auto w-full py-2 bg-black text-white font-semibold text-xl hover:bg-slate-900 duration-100 cursor-pointer"
             >
-              {loading ? "verifying" : "Vefiry"}
+              {verifying ? "Verifying..." : "Verify"}
             </button>
             <button
-              disabled={loading}
+              disabled={resending}
               onClick={handleResendOtp}
-              className={`mt-4 text-blue-300 underline cursor-pointer ${loading && "text-neutral-700"}`}
+              className={`mt-4 text-blue-500 underline cursor-pointer ${
+                resending && "text-neutral-700"
+              }`}
             >
-              Resend Otp
+              {resending ? "Sending..." : "Resend OTP"}
             </button>
           </div>
         </div>
@@ -164,4 +180,4 @@ function page() {
   );
 }
 
-export default page;
+export default Page;

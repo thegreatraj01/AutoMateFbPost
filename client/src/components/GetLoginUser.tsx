@@ -5,7 +5,7 @@ import api from "@/lib/api-client";
 import { setUser } from "@/store/slices/userSlice";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { useRouter } from "next/navigation";
-import { FullPageLoader } from "@/components/ui/loader"; 
+import { FullPageLoader } from "@/components/ui/loader";
 
 function GetLoginUser({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -13,6 +13,16 @@ function GetLoginUser({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const isLogedIn = localStorage.getItem("isLogedIn") === "true";
+
+    // If user is not logged in, directly push to login page
+    if (!isLogedIn) {
+      router.push("/login");
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise fetch user details
     const fetchLoginUser = async () => {
       try {
         const res = await api.get("/user/me");
@@ -28,16 +38,13 @@ function GetLoginUser({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     };
+
     fetchLoginUser();
   }, [dispatch, router]);
 
   if (loading) {
     return <FullPageLoader />;
   }
-
-  // if (!user) {
-  //   return null; // or a fallback message if you don't want to redirect
-  // }
 
   return <>{children}</>;
 }

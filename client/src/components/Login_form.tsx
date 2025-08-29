@@ -20,7 +20,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import api from "@/lib/api-client";
 import { useRouter } from "next/navigation";
-
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../types/redux";
 import { setUser } from "@/store/slices/userSlice";
@@ -43,10 +42,11 @@ export default function LoginForm({
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const router = useRouter();
 
-  const dispath = useDispatch<AppDispatch>();
+  const dispatch = useDispatch<AppDispatch>();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -58,19 +58,16 @@ export default function LoginForm({
 
   const handleLogin = async (data: FormValues) => {
     try {
-      setLoading(true);
+      setLoginLoading(true);
       const res = await api.post("/auth/login", data); // Should set httpOnly cookie
-      // console.log("login res ", res);
       if (res.status === 200) {
         toast.success("Login successful!");
-        dispath(setUser(res.data?.data?.user));
+        dispatch(setUser(res.data?.data?.user));
         form.reset();
-        localStorage.setItem("isLogedIn", "ture");
+        localStorage.setItem("isLogedIn", "true");
         router.push("/");
       }
     } catch (error: unknown) {
-      console.log(error);
-      if (!error) return;
       let msg = "Something went wrong. Try again.";
       if (isAxiosError(error) && error?.response?.data?.message) {
         msg = error.response.data.message;
@@ -85,7 +82,7 @@ export default function LoginForm({
         );
       }
     } finally {
-      setLoading(false);
+      setLoginLoading(false);
     }
   };
 
@@ -98,10 +95,8 @@ export default function LoginForm({
   ) => {
     e.preventDefault();
 
-    // ✅ get email from form
     const email = form.getValues("email");
 
-    // ✅ validate email (if empty or invalid, block)
     const parsed = formSchema.shape.email.safeParse(email);
     if (!parsed.success) {
       toast.error("Please enter a valid email address before resetting.");
@@ -109,19 +104,18 @@ export default function LoginForm({
     }
 
     try {
-      setLoading(true);
+      setResetLoading(true);
       const res = await api.post("/auth/send-p-reset-otp", { email });
 
       if (res.status === 200) {
         toast.success("A verification code has been sent to your email.");
-        // ✅ redirect with query param
         router.push(`/reset_pass?email=${encodeURIComponent(email)}`);
       }
     } catch (error) {
       console.error(error);
       toast.error("Something went wrong while sending reset OTP.");
     } finally {
-      setLoading(false);
+      setResetLoading(false);
     }
   };
 
@@ -165,9 +159,12 @@ export default function LoginForm({
                         <button
                           type="button"
                           onClick={handleResetPassword}
-                          className="text-sm underline-offset-4 hover:underline"
+                          disabled={resetLoading}
+                          className="text-sm underline-offset-4 hover:underline disabled:opacity-50"
                         >
-                          Forgot your password?
+                          {resetLoading
+                            ? "Sending..."
+                            : "Forgot your password?"}
                         </button>
                       </div>
                       <FormControl>
@@ -201,19 +198,15 @@ export default function LoginForm({
               <Button
                 type="submit"
                 className="w-full mt-6 text-shadow-lg font-bold"
-                disabled={loading}
+                disabled={loginLoading}
               >
-                {loading ? "Logging in..." : "Login"}
+                {loginLoading ? "Logging in..." : "Login"}
               </Button>
             </form>
           </Form>
 
           <hr className="bg-black mt-4" />
           <div className="mt-4">
-            {/* <Button variant="outline" className="w-full bg-blue-300">
-              Login with Facebook
-            </Button> */}
-
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
               <Link

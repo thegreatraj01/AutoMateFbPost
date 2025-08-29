@@ -33,10 +33,10 @@ export default function RootLayout({
       >
         <Toaster position="top-right" richColors swipeDirections={["left"]} />
         <ReduxProvider>
-          {/* <ConnectToServer> */}
-            <>{children}</>
-            {/* <GetLoginUser>{children}</GetLoginUser> */}
-          {/* </ConnectToServer> */}
+          <ConnectToServer>
+            {/* <>{children}</> */}
+            <GetLoginUser>{children}</GetLoginUser>
+          </ConnectToServer>
         </ReduxProvider>
       </body>
     </html>

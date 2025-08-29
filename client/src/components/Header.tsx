@@ -9,30 +9,44 @@ import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { clearUser } from "@/store/slices/userSlice";
 import api from "@/lib/api-client";
 import { toast } from "sonner";
+import { isAxiosError } from "axios";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const user = useAppSelector((state) => state.user.user);
+  const user = useAppSelector((state) => state?.user?.user);
   const dispatch = useAppDispatch();
+  const isLoggedInStr = localStorage.getItem("isLogedIn");
+  const isLoggedIn: boolean = isLoggedInStr ? JSON.parse(isLoggedInStr) : false;
 
   const navigation = [
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
   ];
 
-  const showLogin = pathname === "/sign_up";
-  const showLogout = user && pathname !== "/sign_up";
+  const showLogin = !isLoggedIn;
+  const showLogout = isLoggedIn;
 
   const handleLogout = async () => {
-    const res = await api.post("/auth/logout");
-    if (res.status === 200) {
-      toast.success("User logedOut successfully");
-      localStorage.setItem("isLogedIn", "false");
-      dispatch(clearUser());
+    try {
+      const res = await api.post("/auth/logout");
+
+      if (res.status === 200) {
+        toast.success("User logged out successfully");
+        localStorage.setItem("isLogedIn", "false");
+        dispatch(clearUser());
+        router.push("/login");
+      } else {
+        toast.error("Logout failed. Please try again.");
+      }
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Logout failed.");
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
     }
-    router.push("/login");
   };
 
   return (
