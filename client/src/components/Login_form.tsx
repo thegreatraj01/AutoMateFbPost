@@ -80,7 +80,9 @@ export default function LoginForm({
         msg ===
         "Email not verified. Please verify your email before logging in."
       ) {
-        router.push(`/verify-email?email=${form.getValues().email}&resend=true`);
+        router.push(
+          `/verify-email?email=${form.getValues().email}&resend=true`
+        );
       }
     } finally {
       setLoading(false);
@@ -91,6 +93,37 @@ export default function LoginForm({
     setShowPassword(!showPassword);
   };
 
+  const handleResetPassword = async (
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    e.preventDefault();
+
+    // ✅ get email from form
+    const email = form.getValues("email");
+
+    // ✅ validate email (if empty or invalid, block)
+    const parsed = formSchema.shape.email.safeParse(email);
+    if (!parsed.success) {
+      toast.error("Please enter a valid email address before resetting.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await api.post("/auth/send-p-reset-otp", { email });
+
+      if (res.status === 200) {
+        toast.success("A verification code has been sent to your email.");
+        // ✅ redirect with query param
+        router.push(`/reset_pass?email=${encodeURIComponent(email)}`);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong while sending reset OTP.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -129,12 +162,13 @@ export default function LoginForm({
                     <FormItem className="relative">
                       <div className="flex justify-between items-center">
                         <FormLabel>Password</FormLabel>
-                        <a
-                          href="#"
+                        <button
+                          type="button"
+                          onClick={handleResetPassword}
                           className="text-sm underline-offset-4 hover:underline"
                         >
                           Forgot your password?
-                        </a>
+                        </button>
                       </div>
                       <FormControl>
                         <div className="relative">

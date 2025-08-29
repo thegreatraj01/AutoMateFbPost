@@ -208,7 +208,6 @@ export const sendPasswordResetOtp = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-
   // Generate a new OTP
   const otp = await Otp.create({
     email: user.email,
