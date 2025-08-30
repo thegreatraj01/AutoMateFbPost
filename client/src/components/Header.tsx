@@ -4,8 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePathname, useRouter } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/hooks/reduxHooks";
 import { clearUser } from "@/store/slices/userSlice";
 import api from "@/lib/api-client";
 import { toast } from "sonner";
@@ -13,9 +13,9 @@ import { isAxiosError } from "axios";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
+  // const pathname = usePathname();
   const router = useRouter();
-  const user = useAppSelector((state) => state?.user?.user);
+  // const user = useAppSelector((state) => state?.user?.user);
   const dispatch = useAppDispatch();
   const isLoggedInStr = localStorage.getItem("isLogedIn");
   const isLoggedIn: boolean = isLoggedInStr ? JSON.parse(isLoggedInStr) : false;

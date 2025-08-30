@@ -17,7 +17,7 @@ const options = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production", // Must be `true` in production
   sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // Critical!
-  // maxAge: 7 * 24 * 60 * 60 * 1000, 
+  maxAge: 24 * 60 * 60 * 1000 * 7, // 7 day in milliseconds
   path: "/", // Ensure cookies are sent for all routes
 };
 

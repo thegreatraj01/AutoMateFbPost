@@ -6,6 +6,8 @@ import { setUser } from "@/store/slices/userSlice";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { useRouter } from "next/navigation";
 import { FullPageLoader } from "@/components/ui/loader";
+import { isAxiosError } from "axios";
+import { clearUser } from "@/store/slices/userSlice";
 
 function GetLoginUser({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -28,12 +30,18 @@ function GetLoginUser({ children }: { children: React.ReactNode }) {
         const res = await api.get("/user/me");
         if (res.status === 200 && res.data?.data?.user) {
           dispatch(setUser(res.data.data.user));
-        } else {
-          router.push("/login");
         }
       } catch (err) {
-        console.error("Failed to fetch login user:", err);
-        router.push("/login");
+        if (isAxiosError(err) && err?.response?.data) {
+          if (
+            err.response.data?.message === "Unauthorized: No token provided"
+          ) {
+            localStorage.setItem("isLogedIn", "false");
+            dispatch(clearUser());
+            router.push("/login");
+          }
+          console.error("Failed to fetch login user:", err);
+        }
       } finally {
         setLoading(false);
       }
