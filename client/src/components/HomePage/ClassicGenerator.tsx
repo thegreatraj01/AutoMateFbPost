@@ -61,7 +61,7 @@ export default function ClassicGenerator() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setImageUrl("");
+    // setImageUrl("");
 
     try {
       const requestData = {
@@ -80,12 +80,10 @@ export default function ClassicGenerator() {
       };
 
       const res = await api.post("/freepik/generate/classic-fast", requestData);
-      setImageUrl(res.data?.data?.Images[0]?.imageUrl);
       if (res.data?.success) {
+        setImageUrl(res.data?.data?.cloudinary_urls[0]);
         setError("");
-        // setPrompt("");
-        // setNegativePrompt("");
-        // setColors([]);
+        console.log(res.data.data?.generation_meta);
       }
     } catch (err: unknown) {
       if (!err) return;
@@ -343,17 +341,29 @@ export default function ClassicGenerator() {
 
       {/* RIGHT PANEL - IMAGE PREVIEW */}
       <div className="md:w-[50%] p-4">
-        <Card className="bg-[#1c1b29] h-full">
+        <Card className="bg-[#1c1b29] h-full relative">
           <CardContent className="flex flex-col justify-center items-center w-full h-full p-4 aspect-square">
             {imageUrl ? (
               <>
-                <Image
-                  src={imageUrl}
-                  alt="Generated"
-                  width={512}
-                  height={512}
-                  className="w-full h-full object-contain"
-                />
+                <div className="relative group w-full h-full">
+                  {/* Image */}
+                  <Image
+                    src={imageUrl}
+                    alt="Generated"
+                    width={512}
+                    height={512}
+                    className="w-full h-full object-contain"
+                  />
+
+                  {/* NEW Hover Button (icon only, top-right) */}
+                  <Button
+                    onClick={() => handleDownload(imageUrl)}
+                    variant="outline"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 text-white border-white hover:bg-white hover:text-[#1c1b29]"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
                 <Button
                   onClick={() => handleDownload(imageUrl)}
                   variant="outline"

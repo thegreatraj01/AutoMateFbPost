@@ -138,11 +138,11 @@ export const FREEPIK_CLASSIC_FAST_OPTIONS = {
     ],
     // styling.effects.color
     color_effects: [
-        "vibrant",
         "b&w",
         "pastel",
         "sepia",
         "dramatic",
+        "vibrant",
         "orange&teal",
         "film-filter",
         "split",
@@ -176,7 +176,7 @@ export const FREEPIK_CLASSIC_FAST_OPTIONS = {
     ],
     //styling.effects.framing
     framing_effects: [
-        "portrait",
+         "portrait",
         "macro",
         "panoramic",
         "aerial-view",

@@ -60,7 +60,7 @@ function page() {
     e.preventDefault();
     setLoading(true);
     const reqData = {
-      email: loginUser?.email,
+      email: loginUser?.email || email,
       otp: otp.join(""),
     };
     console.log(reqData);
@@ -108,9 +108,8 @@ function page() {
 
   useEffect(() => {
     const emailParam: string = searchParams?.get("email")!;
-    // console.log(emailParam);
+    console.log(emailParam);
     setEmail(emailParam);
-    // console.log(email);
     if (email?.trim()) {
       handleResendOtp();
     }
