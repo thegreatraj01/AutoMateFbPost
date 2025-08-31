@@ -24,7 +24,8 @@ export default function Header() {
     { name: "Home", href: "/" },
     { name: "Imagen", href: "/imagen" },
     { name: "Mystic", href: "/mystic" },
-    { name: "About", href: "/about" },
+    { name: "History", href: "/history" },
+    // { name: "About", href: "/about" },
   ];
 
   const showLogin = !isLoggedIn;

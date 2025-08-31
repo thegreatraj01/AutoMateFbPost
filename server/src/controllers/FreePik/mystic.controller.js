@@ -155,8 +155,6 @@ const validateMysticBody = (body) => {
 };
 
 // 4) Controller: submit, poll, upload, save, respond
-
-
 export const FreePikGenerateImageMystic = async (req, res) => {
   // console.log(`🚀 [Mystic] Request received from user=${req.user?._id || "anonymous"}`);
   try {

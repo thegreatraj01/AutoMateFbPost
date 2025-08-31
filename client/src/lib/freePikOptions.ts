@@ -298,3 +298,27 @@ export const imagen3AspectRatios: AspectRatioOption[] = [
     { label: "3:4", value: "traditional_3_4", icon: RectangleVertical },
     { label: "4:3", value: "classic_4_3", icon: RectangleHorizontal },
 ];
+
+export const FREEPIK_MYSTIC_OPTIONS = {
+    aspect_ratios: [
+        "square_1_1",
+        "social_story_9_16",
+        "widescreen_16_9",
+        "traditional_3_4",
+        "classic_4_3"
+    ],
+    model: ["realism", "fluid", "zen"],
+    structure_strength: {
+        default: 50,
+        min: 0,
+        max: 100
+    }
+};
+
+export const mysticAspectRatios: AspectRatioOption[] = [
+    { label: "1:1", value: "square_1_1", icon: Square },
+    { label: "9:16", value: "social_story_9_16", icon: Smartphone },
+    { label: "16:9", value: "widescreen_16_9", icon: Monitor },
+    { label: "3:4", value: "traditional_3_4", icon: RectangleVertical },
+    { label: "4:3", value: "classic_4_3", icon: RectangleHorizontal },
+];
