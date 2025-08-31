@@ -191,3 +191,110 @@ export const FREEPIK_CLASSIC_FAST_OPTIONS = {
         }
     ]
 };
+
+export const FREEPIK_IMAGEN3_OPTIONS = {
+    aspect_ratios: [
+        "square_1_1",
+        "social_story_9_16",
+        "widescreen_16_9",
+        "traditional_3_4",
+        "classic_4_3"
+    ],
+    styles: [
+        "photo",
+        "anime",
+        "digital-art",
+        "3d",
+        "painting",
+        "low-poly",
+        "pixel-art",
+        "cyberpunk",
+        "comic",
+        "vintage",
+        "cartoon",
+        "vector",
+        "studio-shot",
+        "dark",
+        "sketch",
+        "mockup",
+        "watercolor",
+        "art-nouveau",
+        "origami",
+        "surreal",
+        "fantasy",
+        "traditional-japan"
+    ],
+    color_effects: [
+        "vibrant",
+        "pastel",
+        "dramatic",
+        "sepia",
+        "b&w",
+        "orange&teal",
+        "film-filter",
+        "split",
+        "electric",
+        "pastel-pink",
+        "gold-glow",
+        "autumn",
+        "muted-green",
+        "deep-teal",
+        "duotone",
+        "terracotta&teal",
+        "red&blue",
+        "cold-neon",
+        "burgundy&blue"
+    ],
+    lightning_effects: [
+        "studio",
+        "warm",
+        "cinematic",
+        "volumetric",
+        "golden-hour",
+        "long-exposure",
+        "cold",
+        "iridescent",
+        "dramatic",
+        "hardlight",
+        "redscale",
+        "indoor-light"
+    ],
+    framing_effects: [
+        "portrait",
+        "macro",
+        "panoramic",
+        "aerial-view",
+        "close-up",
+        "cinematic",
+        "high-angle",
+        "low-angle",
+        "symmetry",
+        "fish-eye",
+        "first-person"
+    ],
+    person_generation: [
+        "allow_adult",    // Allow generation of adults
+        "allow_all",      // Allow generation of all people (including children)
+        "dont_allow"      // Don't allow generation of any people
+    ],
+    safety_settings: [
+        "block_low_and_above",      // Blocks low-risk and above content
+        "block_medium_and_above",   // Blocks medium-risk and above content  
+        "block_only_high",          // Blocks only high-risk content
+        "block_none"                // No content blocking
+    ],
+    num_images_range: {
+        min: 1,
+        max: 4,
+        default: 1
+    },
+
+};
+
+export const imagen3AspectRatios: AspectRatioOption[] = [
+    { label: "1:1", value: "square_1_1", icon: Square },
+    { label: "9:16", value: "social_story_9_16", icon: Smartphone },
+    { label: "16:9", value: "widescreen_16_9", icon: Monitor },
+    { label: "3:4", value: "traditional_3_4", icon: RectangleVertical },
+    { label: "4:3", value: "classic_4_3", icon: RectangleHorizontal },
+];
