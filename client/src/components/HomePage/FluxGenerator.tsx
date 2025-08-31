@@ -5,9 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-
-import { Download, Loader2 } from "lucide-react";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import api from "@/lib/api-client";
 import { FREEPIK_FLUX_OPTIONS, fluxAspectRatios } from "@/lib/freePikOptions";
 import { toast } from "sonner";
@@ -20,6 +18,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { isAxiosError } from "axios";
+import ImageCard from "../ImageCard";
 
 interface ColorOption {
   color: string;
@@ -66,15 +65,18 @@ export default function FluxGenerator() {
       const requestData = {
         prompt,
         aspect_ratio: aspectRatio,
-        color: colorEffect,
-        framing: framingEffect,
-        lightning: lightingEffect,
-        colors,
+        color_effect: colorEffect,
+        framing_effect: framingEffect,
+        lightning_effect: lightingEffect,
+        custom_colors: colors,
         seed: Math.floor(Math.random() * 2147483648),
       };
 
-      const res = await api.post("/freepik/generate/flux", requestData);
-      setImageUrl(res.data?.data?.image?.imageUrl);
+      const res = await api.post("/freepik/generate/flux-dev", requestData);
+      if (res.status === 200) {
+        setImageUrl(res.data?.data?.cloudinary_url);
+        console.log(res.data?.data?.generation_meta);
+      }
     } catch (err: unknown) {
       // console.error(err);
       if (!err) return;
@@ -86,27 +88,6 @@ export default function FluxGenerator() {
       setError(msg);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDownload = async (imageUrl: string) => {
-    if (!imageUrl) return;
-
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `ai-generated-${Date.now()}.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Failed to download image", error);
     }
   };
 
@@ -262,23 +243,7 @@ export default function FluxGenerator() {
         <Card className="bg-[#1c1b29] h-full">
           <CardContent className="flex flex-col justify-center items-center w-full h-full p-4 aspect-square">
             {imageUrl ? (
-              <>
-                <Image
-                  src={imageUrl}
-                  alt="Generated"
-                  width={512}
-                  height={512}
-                  className="w-full h-full object-contain"
-                />
-                <Button
-                  onClick={() => handleDownload(imageUrl)}
-                  variant="outline"
-                  className="mt-4 bg-transparent text-white border-white hover:bg-white hover:text-[#1c1b29]"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Image
-                </Button>
-              </>
+              <ImageCard imageUrl={imageUrl} />
             ) : (
               <div className="text-white/30 text-center p-4">
                 <p>Your generated image will appear here</p>

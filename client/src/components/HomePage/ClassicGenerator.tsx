@@ -14,8 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Download } from "lucide-react";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import {
   FREEPIK_CLASSIC_FAST_OPTIONS,
   classicFastAspectRatios,
@@ -24,6 +23,7 @@ import api from "@/lib/api-client";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { isAxiosError } from "axios";
+import ImageCard from "../ImageCard";
 
 interface ColorOption {
   color: string;
@@ -98,26 +98,7 @@ export default function ClassicGenerator() {
     }
   };
 
-  const handleDownload = async (imageUrl: string) => {
-    if (!imageUrl) return;
-
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `ai-generated-${Date.now()}.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Failed to download image", error);
-    }
-  };
+  
 
   const handleAddColor = () => {
     if (!newColor || newWeight < 0.05 || newWeight > 1) return;
@@ -344,35 +325,7 @@ export default function ClassicGenerator() {
         <Card className="bg-[#1c1b29] h-full relative">
           <CardContent className="flex flex-col justify-center items-center w-full h-full p-4 aspect-square">
             {imageUrl ? (
-              <>
-                <div className="relative group w-full h-full">
-                  {/* Image */}
-                  <Image
-                    src={imageUrl}
-                    alt="Generated"
-                    width={512}
-                    height={512}
-                    className="w-full h-full object-contain"
-                  />
-
-                  {/* NEW Hover Button (icon only, top-right) */}
-                  <Button
-                    onClick={() => handleDownload(imageUrl)}
-                    variant="outline"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 text-white border-white hover:bg-white hover:text-[#1c1b29]"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button
-                  onClick={() => handleDownload(imageUrl)}
-                  variant="outline"
-                  className="mt-4 bg-transparent text-white border-white hover:bg-white hover:text-[#1c1b29]"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Image
-                </Button>
-              </>
+              <ImageCard imageUrl={imageUrl}/>
             ) : (
               <div className="text-white/30 text-center p-4">
                 <p>Your generated image will appear here</p>

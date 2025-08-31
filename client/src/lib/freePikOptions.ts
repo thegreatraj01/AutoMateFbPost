@@ -51,16 +51,7 @@ export const classicFastAspectRatios: AspectRatioOption[] = [
 export const FREEPIK_FLUX_OPTIONS = {
 
     aspect_ratios: [
-        "square_1_1",
-        "classic_4_3",
-        "traditional_3_4",
-        "widescreen_16_9",
-        "social_story_9_16",
-        "standard_3_2",
-        "portrait_2_3",
-        "horizontal_2_1",
-        "vertical_1_2",
-        "social_post_4_5"
+        "square_1_1", "classic_4_3", "traditional_3_4", "widescreen_16_9", "social_story_9_16", "standard_3_2", "portrait_2_3", "horizontal_2_1", "vertical_1_2", "social_post_4_5"
     ],
     // styling.effects.color
     color_effects: [
@@ -176,7 +167,7 @@ export const FREEPIK_CLASSIC_FAST_OPTIONS = {
     ],
     //styling.effects.framing
     framing_effects: [
-         "portrait",
+        "portrait",
         "macro",
         "panoramic",
         "aerial-view",

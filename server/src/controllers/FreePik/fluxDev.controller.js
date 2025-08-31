@@ -474,19 +474,7 @@ export const getFreepikFluxDevOptions = asyncHandler(async (req, res) => {
  */
 export const FREEPIK_FLUX_DEV_OPTIONS = {
     aspect_ratios: [
-        "square_1_1",
-        "classic_4_3",
-        "traditional_3_4",
-        "widescreen_16_9",
-        "social_story_9_16",
-        "smartphone_horizontal_20_9",
-        "smartphone_vertical_9_20",
-        "standard_3_2",
-        "portrait_2_3",
-        "horizontal_2_1",
-        "vertical_1_2",
-        "social_5_4",
-        "social_post_4_5"
+        "square_1_1", "classic_4_3", "traditional_3_4", "widescreen_16_9", "social_story_9_16", "standard_3_2", "portrait_2_3", "horizontal_2_1", "vertical_1_2", "social_post_4_5"
     ],
     color_effects: [
         "softhue", "b&w", "goldglow", "vibrant", "coldneon"
