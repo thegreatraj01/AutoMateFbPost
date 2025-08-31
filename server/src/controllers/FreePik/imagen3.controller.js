@@ -137,7 +137,9 @@ const pollTaskStatus = async (taskId, endpoint = 'imagen3') => {
 
             console.log(`🔄 Polling attempt ${attempt}/${MAX_RETRIES} for task: ${taskId}`);
 
-            const { data } = await FREEPIK_API.get(`/text-to-image/${endpoint}/${taskId}`);
+            const res = await FREEPIK_API.get(`/text-to-image/${endpoint}/${taskId}`);
+            // console.log('res ' , res);
+            const data = res.data;
             console.log('poll data ', data, data.data.status);
             // Handle response based on status
             if (data.data.status === "COMPLETED") {
@@ -147,7 +149,7 @@ const pollTaskStatus = async (taskId, endpoint = 'imagen3') => {
 
             if (data.data.status === "FAILED") {
                 console.log('status failed ')
-                throw new ApiError(500, `Image generation failed for task: ${taskId} Try Again`, {
+                throw new ApiError(500, `Image generation failed Try Again`, {
                     task_id: taskId,
                     status: data.data.status,
                     endpoint

@@ -103,7 +103,7 @@ export default function ImagenGenerator() {
         }}
         className="text-3xl font-bold text-center mb-6 cursor-pointer"
       >
-        Imagen 
+        Imagen
       </h1>
       <div className="flex flex-col md:flex-row gap-6 justify-center">
         <div className="md:w-[40%] space-y-4">
@@ -209,11 +209,11 @@ export default function ImagenGenerator() {
           <Card className="bg-[#1c1b29] h-full">
             <CardContent className="flex flex-col justify-center items-center w-full h-full p-4 aspect-square">
               {imageUrls.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
+                <>
                   {imageUrls.map((url, index) => (
                     <ImageCard key={index} imageUrl={url} />
                   ))}
-                </div>
+                </>
               ) : (
                 <div className="text-white/30 text-center p-4">
                   <p>Your generated image(s) will appear here</p>
