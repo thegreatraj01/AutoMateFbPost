@@ -34,6 +34,7 @@ api.interceptors.response.use(
                 }
             } catch (refreshError) {
                 console.log(refreshError);
+                localStorage.setItem('isLogedIn', 'false');
                 return Promise.reject(refreshError);
             }
         }

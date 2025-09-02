@@ -36,20 +36,20 @@ function ImageCardForHistory({ imageUrl, prompt, model }: ImageCardProps) {
   };
 
   return (
-    <div className="relative group aspect-square w-full h-auto overflow-hidden rounded-lg shadow-lg">
+    <div className="relative group w-full h-auto overflow-hidden rounded-lg shadow-lg">
       {/* Image */}
       <Image
         src={imageUrl}
         alt={prompt || "AI generated image"}
-        fill
-        className="object-cover transition-transform duration-300 md:group-hover:scale-105"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        width={500} // You can tweak this based on API sizes
+        height={0} // Let height adjust
+        className="w-full h-auto object-cover rounded-lg transition-transform duration-300 md:group-hover:scale-105"
       />
 
-      {/* Gradient Overlay for Text Readability */}
+      {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0" />
 
-      {/* Download Button: Visible on mobile, hover on desktop */}
+      {/* Download Button */}
       <Button
         onClick={handleDownload}
         variant="ghost"
@@ -60,7 +60,7 @@ function ImageCardForHistory({ imageUrl, prompt, model }: ImageCardProps) {
         <span className="sr-only">Download Image</span>
       </Button>
 
-      {/* Prompt and Model Info Overlay: Visible on mobile, hover on desktop */}
+      {/* Prompt and Model Info */}
       <div className="absolute bottom-0 left-0 right-0 p-3 text-white transition-transform duration-300 md:translate-y-full md:group-hover:translate-y-0">
         {model && (
           <p className="font-bold text-sm capitalize truncate">{model}</p>
