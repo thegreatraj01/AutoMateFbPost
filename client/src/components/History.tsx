@@ -1,7 +1,7 @@
 // app/history/page.tsx (or wherever your history page is)
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { Loader2 } from "lucide-react";
 import {
@@ -88,7 +88,7 @@ export default function HistoryPage() {
         ) : (
           !loading && (
             <div className="text-center py-20 text-gray-500">
-              <p>You haven't generated any images yet.</p>
+              <p>You haven&apos;t generated any images yet.</p>
               <p className="text-sm">
                 Start creating to see your history here!
               </p>
@@ -102,7 +102,7 @@ export default function HistoryPage() {
             <Loader2 className="animate-spin h-8 w-8 text-gray-400" />
           )}
           {!loading && !hasNextPage && items.length > 0 && (
-            <p className="text-sm text-gray-500">You've reached the end.</p>
+            <p className="text-sm text-gray-500">You&apos;ve reached the end.</p>
           )}
         </div>
 
@@ -115,22 +115,3 @@ export default function HistoryPage() {
     </div>
   );
 }
-
-const History = () => {
-  return (
-    <div
-      id="tab-home"
-      onClick={() => {}}
-      className="mx-auto mt-4 p-4 min-h-[60vh] md:mx-16 bg-slate-200 rounded-xl max-w-screen-xl"
-    >
-      <h1
-        onClick={() => {
-          window.scrollTo({ top: 80, behavior: "smooth" }); // scroll to top
-        }}
-        className="text-2xl font-bold text-center mb-6 cursor-pointer"
-      >
-        History
-      </h1>
-    </div>
-  );
-};

@@ -58,7 +58,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
 
 
 export const verifyAdmin = asyncHandler(async (req, res, next) => {
-  console.log('req.user', req.user);
+  // console.log('req.user', req.user);
   if (req?.user && req.user?.email === process.env.GMAIL_USER) {
     return next();
   };

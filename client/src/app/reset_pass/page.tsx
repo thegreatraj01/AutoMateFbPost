@@ -1,12 +1,12 @@
 "use client";
-import { useAppSelector } from "@/hooks/reduxHooks";
+// import { useAppSelector } from "@/hooks/reduxHooks";
 import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/api-client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/types/redux";
-import { setUser } from "@/store/slices/userSlice";
+// import { useDispatch } from "react-redux";
+// import { AppDispatch } from "@/types/redux";
+// import { setUser } from "@/store/slices/userSlice";
 import {
   Form,
   FormControl,
@@ -49,11 +49,11 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>;
 
 function Page() {
-  const loginUser = useAppSelector((state) => state.user.user);
+  // const loginUser = useAppSelector((state) => state.user.user);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
+  // const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
 

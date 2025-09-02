@@ -23,6 +23,7 @@ import {
   mysticAspectRatios,
 } from "@/lib/freePikOptions";
 import ImageCard from "./ImageCard";
+import Image from "next/image";
 
 interface EffectSelectorProps {
   label: string;
@@ -155,7 +156,7 @@ export default function MysticGenerator() {
               <CardContent className="p-4 text-center">
                 {styleReferencePreview ? (
                   <div className="relative">
-                    <img
+                    <Image
                       src={styleReferencePreview}
                       alt="Style Preview"
                       className="rounded-md max-h-40 mx-auto"

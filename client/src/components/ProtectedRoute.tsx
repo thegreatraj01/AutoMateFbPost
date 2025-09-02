@@ -17,7 +17,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [router,isLogedIn]);
 
   if (loading) {
     return <FullPageLoader />;
