@@ -17,7 +17,9 @@ app.use(
     })
 );
 
-app.use(express.json());
+// Increase request body size limits to avoid "request entity too large"
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(express.static("public"));
 
 
