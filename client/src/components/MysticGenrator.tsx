@@ -157,6 +157,8 @@ export default function MysticGenerator() {
                 {styleReferencePreview ? (
                   <div className="relative">
                     <Image
+                      width={160}
+                      height={160}
                       src={styleReferencePreview}
                       alt="Style Preview"
                       className="rounded-md max-h-40 mx-auto"
