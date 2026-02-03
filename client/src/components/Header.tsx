@@ -114,7 +114,7 @@ export default function Header() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden">
+        <div className=" absolute right-0 top-14 z-50 w-full bg-white lg:hidden">
           <div className="space-y-2 px-4 pb-3 pt-2">
             {navigation.map((item) => (
               <Button
