@@ -102,7 +102,9 @@ export default function HistoryPage() {
             <Loader2 className="animate-spin h-8 w-8 text-gray-400" />
           )}
           {!loading && !hasNextPage && items.length > 0 && (
-            <p className="text-sm text-gray-500">You&apos;ve reached the end.</p>
+            <p className="text-sm text-gray-500">
+              You&apos;ve reached the end.
+            </p>
           )}
         </div>
 
