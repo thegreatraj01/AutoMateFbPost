@@ -34,10 +34,27 @@ export function ConnectToServerLoader() {
   return (
     <div className="w-full h-screen flex flex-col items-center justify-center bg-background text-foreground">
       <div className="flex flex-col items-center gap-4 animate-in fade-in duration-700">
-        <Loader size={40} className="text-primary" label="Connecting to server" />
+        <Loader
+          size={40}
+          className="text-primary"
+          label="Connecting to server"
+        />
         <p className="text-sm text-muted-foreground text-center max-w-md">
           ⚡ This is a free Render server with cold start. Please wait around{" "}
           <span className="font-semibold">15 seconds</span>.
+          <br />
+          <p className="text-xl text-red-400 font-semibold">
+            In the meantime, you can explore the codebase{" "}
+            <a
+              href="https://github.com/thegreatraj01/AutoMateFbPost"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-primary hover:opacity-80"
+            >
+              here
+            </a>
+            .
+          </p>
         </p>
         <p className="text-lg font-medium animate-pulse">
           Connecting to server...
