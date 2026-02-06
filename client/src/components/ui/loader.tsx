@@ -42,19 +42,18 @@ export function ConnectToServerLoader() {
         <p className="text-sm text-muted-foreground text-center max-w-md">
           ⚡ This is a free Render server with cold start. Please wait around{" "}
           <span className="font-semibold">15 seconds</span>.
-          <br />
-          <p className="text-xl text-red-400 font-semibold">
-            In the meantime, you can explore the codebase{" "}
-            <a
-              href="https://github.com/thegreatraj01/AutoMateFbPost"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline text-primary hover:opacity-80"
-            >
-              here
-            </a>
-            .
-          </p>
+        </p>
+        <p className="text-xl text-red-400 font-semibold">
+          In the meantime, you can explore the codebase{" "}
+          <a
+            href="https://github.com/thegreatraj01/AutoMateFbPost"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-primary hover:opacity-80"
+          >
+            here
+          </a>
+          .
         </p>
         <p className="text-lg font-medium animate-pulse">
           Connecting to server...
