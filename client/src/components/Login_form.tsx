@@ -55,6 +55,34 @@ export default function LoginForm({
       password: "",
     },
   });
+  // demo guest credentials (use demo account only!)
+  const GUEST_CREDENTIALS: FormValues = {
+    email: "thegreatraj0810@gmail.com",
+    password: "Raj@1234",
+  };
+
+  const handleGuestLogin = async () => {
+    try {
+      setLoginLoading(true);
+
+      const res = await api.post("/auth/login", GUEST_CREDENTIALS);
+
+      if (res.status === 200) {
+        toast.success("Logged in as guest!");
+        dispatch(setUser(res.data?.data?.user));
+        localStorage.setItem("isLogedIn", "true");
+        router.push("/");
+      }
+    } catch (error: unknown) {
+      let msg = "Guest login failed.";
+      if (isAxiosError(error) && error?.response?.data?.message) {
+        msg = error.response.data.message;
+      }
+      toast.error(msg);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
   const handleLogin = async (data: FormValues) => {
     try {
@@ -78,7 +106,7 @@ export default function LoginForm({
         "Email not verified. Please verify your email before logging in."
       ) {
         router.push(
-          `/verify-email?email=${form.getValues().email}&resend=true`
+          `/verify-email?email=${form.getValues().email}&resend=true`,
         );
       }
     } finally {
@@ -91,7 +119,7 @@ export default function LoginForm({
   };
 
   const handleResetPassword = async (
-    e: React.MouseEvent<HTMLButtonElement>
+    e: React.MouseEvent<HTMLButtonElement>,
   ) => {
     e.preventDefault();
 
@@ -201,6 +229,15 @@ export default function LoginForm({
                 disabled={loginLoading}
               >
                 {loginLoading ? "Logging in..." : "Login"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full mt-3"
+                onClick={handleGuestLogin}
+                disabled={loginLoading}
+              >
+                Login as Guest
               </Button>
             </form>
           </Form>
